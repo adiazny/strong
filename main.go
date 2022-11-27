@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"text/template"
 
 	"github.com/adiazny/strong/internal/pkg/strong"
 )
@@ -28,7 +30,13 @@ func main() {
 
 	completeWorkouts := strong.CombineWorkouts(workouts)
 
-	for _, workout := range completeWorkouts {
-		fmt.Printf("Workout %v\n\n", workout)
+	fmt.Println(completeWorkouts[0].String())
+
+	t := template.Must(template.New("workoutLog").Parse(strong.WorkoutTemplate))
+
+	err = t.Execute(os.Stdout, completeWorkouts)
+	if err != nil {
+		log.Println("executing template:", err)
 	}
+
 }

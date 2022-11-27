@@ -9,6 +9,16 @@ import (
 	"time"
 )
 
+const WorkoutTemplate = `
+{{range .}}
+{{.Name}}
+{{.Date}}
+
+{{range $exercise := .Exercises}}{{range .Sets}}{{$exercise.Name}} Set {{.Id}}: {{.Weight}} x {{.Reps}}{{end}}
+{{end}}
+{{end}}
+`
+
 type Workout struct {
 	Name      string
 	Date      string
@@ -148,6 +158,10 @@ func CombineWorkouts(workouts []Workout) []Workout {
 	}
 
 	return finalWorkouts
+}
+
+func (workout *Workout) String() string {
+	return "BLAH"
 }
 
 func parseWorkoutDuration(duration string) (time.Duration, error) {
