@@ -26,7 +26,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, workout := range workouts {
-		fmt.Printf("Workout %+v", workout)
+	completeWorkouts := strong.CombineWorkouts(workouts)
+
+	for _, workout := range completeWorkouts {
+		fmt.Printf("Workout %v\n\n", workout)
 	}
 }

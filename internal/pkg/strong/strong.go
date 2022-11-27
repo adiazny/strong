@@ -51,11 +51,6 @@ func ConvertRecords(records [][]string) ([]Workout, error) {
 			continue
 		}
 
-		// dateTime, err := parseDate(record[0])
-		// if err != nil {
-		// 	return nil, err
-		// }
-
 		workoutDuration, err := parseWorkoutDuration(record[2])
 		if err != nil {
 			return nil, err
@@ -121,44 +116,35 @@ func CombineWorkouts(workouts []Workout) []Workout {
 		return nil
 	}
 
-	dateWorkoutMap := make(map[string][]Workout)
-	allWorkouts := make([]Workout, 0)
+	dateSet := make(map[string]struct{})
 
 	for _, workout := range workouts {
-		if _, ok := dateWorkoutMap[workout.Date]; !ok {
-			dateWorkoutMap[workout.Date] = append(allWorkouts, workout)
-
-			continue
-		}
-
-		if _, ok := dateWorkoutMap[workout.Date]; ok {
-
-			dateWorkoutMap[workout.Date] = append(allWorkouts, workout)
+		if _, ok := dateSet[workout.Date]; !ok {
+			dateSet[workout.Date] = struct{}{}
 		}
 	}
 
 	finalWorkouts := make([]Workout, 0)
 
-	exercises := make([]Exercise, 0)
+	for date := range dateSet {
+		exercises := make([]Exercise, 0)
 
-	for date, workouts := range dateWorkoutMap {
-		for _, workout := range workouts {
-			filteredExercises := filterExercises(workout.Exercises, func(exercise Exercise) bool {
-				return workout.Date == date
-			})
+		filteredWorkouts := filterWorkouts(workouts, func(workout Workout) bool {
+			return workout.Date == date
+		})
 
-			exercises = append(exercises, filteredExercises...)
+		for _, workout := range filteredWorkouts {
+			exercises = append(exercises, workout.Exercises...)
 		}
 
 		workout := Workout{
-			Name:      workouts[0].Name,
+			Name:      filteredWorkouts[0].Name,
 			Date:      date,
-			Duration:  workouts[0].Duration,
+			Duration:  filteredWorkouts[0].Duration,
 			Exercises: exercises,
 		}
 
 		finalWorkouts = append(finalWorkouts, workout)
-
 	}
 
 	return finalWorkouts
@@ -220,17 +206,17 @@ func parseFloat(input string) (float64, error) {
 	return float, nil
 }
 
-func filterExercises(exercises []Exercise, matchFunc func(exercise Exercise) bool) []Exercise {
-	filteredExercises := make([]Exercise, 0)
+func filterWorkouts(workouts []Workout, matchFunc func(workout Workout) bool) []Workout {
+	filteredWorkouts := make([]Workout, 0)
 
-	for _, exercise := range exercises {
-		match := matchFunc(exercise)
+	for _, workout := range workouts {
+		match := matchFunc(workout)
 
 		if match {
-			filteredExercises = append(filteredExercises, exercise)
+			filteredWorkouts = append(filteredWorkouts, workout)
 		}
 
 	}
 
-	return filteredExercises
+	return filteredWorkouts
 }

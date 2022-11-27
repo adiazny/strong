@@ -152,90 +152,90 @@ func TestCombineWorkouts(t *testing.T) {
 		args args
 		want []strong.Workout
 	}{
-		// {
-		// 	name: "success with one workout day",
-		// 	args: args{
-		// 		workouts: []strong.Workout{
-		// 			{
-		// 				Name:     "Day A",
-		// 				Date:     "2022-11-14 07:15:24",
-		// 				Duration: 1800000000000,
-		// 				Exercises: []strong.Exercise{
-		// 					{
-		// 						Name: "Squat (Barbell)",
-		// 						Sets: []strong.Set{{
-		// 							Id:     1,
-		// 							Weight: 44.99999997795377,
-		// 							Reps:   5},
-		// 						},
-		// 					},
-		// 				},
-		// 			},
-		// 			{
-		// 				Name:     "Day A",
-		// 				Date:     "2022-11-14 07:15:24",
-		// 				Duration: 1800000000000,
-		// 				Exercises: []strong.Exercise{
-		// 					{
-		// 						Name: "Squat (Barbell)",
-		// 						Sets: []strong.Set{{
-		// 							Id:     2,
-		// 							Weight: 74.99999999999999,
-		// 							Reps:   5},
-		// 						},
-		// 					},
-		// 				},
-		// 			},
-		// 			{
-		// 				Name:     "Day A",
-		// 				Date:     "2022-11-14 07:15:24",
-		// 				Duration: 1800000000000,
-		// 				Exercises: []strong.Exercise{
-		// 					{
-		// 						Name: "Squat (Barbell)",
-		// 						Sets: []strong.Set{{
-		// 							Id:     3,
-		// 							Weight: 95.0,
-		// 							Reps:   3},
-		// 						},
-		// 					},
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	want: []strong.Workout{{
-		// 		Name:     "Day A",
-		// 		Date:     "2022-11-14 07:15:24",
-		// 		Duration: 1800000000000,
-		// 		Exercises: []strong.Exercise{
-		// 			{
-		// 				Name: "Squat (Barbell)",
-		// 				Sets: []strong.Set{{
-		// 					Id:     1,
-		// 					Weight: 44.99999997795377,
-		// 					Reps:   5},
-		// 				},
-		// 			},
-		// 			{
-		// 				Name: "Squat (Barbell)",
-		// 				Sets: []strong.Set{{
-		// 					Id:     2,
-		// 					Weight: 74.99999999999999,
-		// 					Reps:   5},
-		// 				},
-		// 			},
-		// 			{
-		// 				Name: "Squat (Barbell)",
-		// 				Sets: []strong.Set{{
-		// 					Id:     3,
-		// 					Weight: 95.0,
-		// 					Reps:   3},
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	},
-		// },
+		{
+			name: "success with one workout day",
+			args: args{
+				workouts: []strong.Workout{
+					{
+						Name:     "Day A",
+						Date:     "2022-11-14 07:15:24",
+						Duration: 1800000000000,
+						Exercises: []strong.Exercise{
+							{
+								Name: "Squat (Barbell)",
+								Sets: []strong.Set{{
+									Id:     1,
+									Weight: 44.99999997795377,
+									Reps:   5},
+								},
+							},
+						},
+					},
+					{
+						Name:     "Day A",
+						Date:     "2022-11-14 07:15:24",
+						Duration: 1800000000000,
+						Exercises: []strong.Exercise{
+							{
+								Name: "Squat (Barbell)",
+								Sets: []strong.Set{{
+									Id:     2,
+									Weight: 74.99999999999999,
+									Reps:   5},
+								},
+							},
+						},
+					},
+					{
+						Name:     "Day A",
+						Date:     "2022-11-14 07:15:24",
+						Duration: 1800000000000,
+						Exercises: []strong.Exercise{
+							{
+								Name: "Squat (Barbell)",
+								Sets: []strong.Set{{
+									Id:     3,
+									Weight: 95.0,
+									Reps:   3},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []strong.Workout{{
+				Name:     "Day A",
+				Date:     "2022-11-14 07:15:24",
+				Duration: 1800000000000,
+				Exercises: []strong.Exercise{
+					{
+						Name: "Squat (Barbell)",
+						Sets: []strong.Set{{
+							Id:     1,
+							Weight: 44.99999997795377,
+							Reps:   5},
+						},
+					},
+					{
+						Name: "Squat (Barbell)",
+						Sets: []strong.Set{{
+							Id:     2,
+							Weight: 74.99999999999999,
+							Reps:   5},
+						},
+					},
+					{
+						Name: "Squat (Barbell)",
+						Sets: []strong.Set{{
+							Id:     3,
+							Weight: 95.0,
+							Reps:   3},
+						},
+					},
+				},
+			},
+			},
+		},
 		{
 			name: "success with two workout day",
 			args: args{
@@ -302,21 +302,53 @@ func TestCombineWorkouts(t *testing.T) {
 					},
 				},
 			},
-			want: []strong.Workout{{
-				Name:     "Day B",
-				Date:     "2022-11-16 06:54:38",
-				Duration: 1800000000000,
-				Exercises: []strong.Exercise{
-					{
-						Name: "Deadlift (Barbell)",
-						Sets: []strong.Set{{
-							Id:     1,
-							Weight: 225,
-							Reps:   8},
+			want: []strong.Workout{
+				{
+					Name:     "Day A",
+					Date:     "2022-11-14 07:15:24",
+					Duration: 1800000000000,
+					Exercises: []strong.Exercise{
+						{
+							Name: "Squat (Barbell)",
+							Sets: []strong.Set{{
+								Id:     1,
+								Weight: 44.99999997795377,
+								Reps:   5},
+							},
+						},
+						{
+							Name: "Squat (Barbell)",
+							Sets: []strong.Set{{
+								Id:     2,
+								Weight: 74.99999999999999,
+								Reps:   5},
+							},
+						},
+						{
+							Name: "Squat (Barbell)",
+							Sets: []strong.Set{{
+								Id:     3,
+								Weight: 95.0,
+								Reps:   3},
+							},
 						},
 					},
 				},
-			},
+				{
+					Name:     "Day B",
+					Date:     "2022-11-16 06:54:38",
+					Duration: 1800000000000,
+					Exercises: []strong.Exercise{
+						{
+							Name: "Deadlift (Barbell)",
+							Sets: []strong.Set{{
+								Id:     1,
+								Weight: 225,
+								Reps:   8},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -329,9 +361,6 @@ func TestCombineWorkouts(t *testing.T) {
 
 			got := strong.CombineWorkouts(tt.args.workouts)
 
-			// if got := strong.CombineWorkouts(tt.args.workouts); !reflect.DeepEqual(got, tt.want) {
-			// 	t.Errorf("CombineWorkouts() = %v, want %v", got, tt.want)
-			// }
 			assert.ElementsMatch(t, tt.want, got)
 		})
 	}
