@@ -13,3 +13,24 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# VS Code
+.vscode/
+
+# MAC
+.DS_Store
+
+# Program Binary
+main
+cmd/strong
+
+# ZIP files
+*.zip
+cmd/*.zip
+
+# Environment variables
+config/.env
+
+# csv files
+examples/*.csv
+*.csv
