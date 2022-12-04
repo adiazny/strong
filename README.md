@@ -14,6 +14,9 @@ strong app workout logs published to strava
 "The most important reason to write tests first is that, to do that, we need to have a clear idea of how the program should behave, from the user’s point of view. There’s some thinking involved in that, and the best time to do it is before we’ve written any code."
 
 
+# Google Drive API
+- [Google Drive API](https://developers.google.com/drive/api) - [Google Workspace](https://developers.google.com/workspace/guides/get-started) - [Google Drive Activity API](https://developers.google.com/drive/activity/v2)
+
 
 ## Research
 - VSCode extention to work with csv files: edit CSV

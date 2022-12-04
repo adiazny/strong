@@ -366,3 +366,63 @@ func TestCombineWorkouts(t *testing.T) {
 		})
 	}
 }
+
+func TestGetLatestWorkout(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		completedWorkouts []strong.Workout
+	}
+	tests := []struct {
+		name string
+		args args
+		want strong.Workout
+	}{
+		{
+			name: "Two workouts",
+			args: args{
+				completedWorkouts: []strong.Workout{
+					{
+						Name:     "Workout A",
+						Date:     "2022-11-16 06:54:38",
+						Duration: 60,
+						Exercises: []strong.Exercise{{
+							Name: "Pushup",
+							Sets: []strong.Set{},
+						}},
+					},
+					{
+						Name:     "Workout B",
+						Date:     "2022-11-17 06:54:38",
+						Duration: 60,
+						Exercises: []strong.Exercise{{
+							Name: "Pullup",
+							Sets: []strong.Set{},
+						}},
+					},
+				}},
+			want: strong.Workout{
+				Name:     "Workout B",
+				Date:     "2022-11-17 06:54:38",
+				Duration: 60,
+				Exercises: []strong.Exercise{{
+					Name: "Pullup",
+					Sets: []strong.Set{},
+				}},
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := strong.GetLatestWorkout(tt.args.completedWorkouts)
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetLatestWorkout() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

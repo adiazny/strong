@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -233,4 +234,16 @@ func filterWorkouts(workouts []Workout, matchFunc func(workout Workout) bool) []
 	}
 
 	return filteredWorkouts
+}
+
+func GetLatestWorkout(completedWorkouts []Workout) Workout {
+	if len(completedWorkouts) == 0 {
+		return Workout{}
+	}
+
+	sort.Slice(completedWorkouts, func(i, j int) bool {
+		return completedWorkouts[i].Date > completedWorkouts[j].Date
+	})
+
+	return completedWorkouts[0]
 }
