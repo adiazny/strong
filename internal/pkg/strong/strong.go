@@ -1,30 +1,48 @@
 package strong
 
 import (
+	"bytes"
 	"encoding/csv"
 	"fmt"
 	"io"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 )
 
 const WorkoutTemplate = `
-{{range .}}
 {{.Name}}
 {{.Date}}
 
-{{range $exercise := .Exercises}}{{range .Sets}}{{$exercise.Name}} Set {{.Id}}: {{.Weight}} x {{.Reps}}{{end}}
-{{end}}
+{{range $exercise := .Exercises}}{{range .Sets}}{{$exercise.Name}} Set {{.Id}}: {{.Weight}}# x {{.Reps}}{{end}}
 {{end}}
 `
+
+type Config struct {
+	CompletedWorkouts []Workout
+}
 
 type Workout struct {
 	Name      string
 	Date      string
 	Duration  time.Duration
 	Exercises []Exercise
+}
+
+func (workout *Workout) String() string {
+	t := template.Must(template.New("workoutLog").Parse(WorkoutTemplate))
+
+	buf := new(bytes.Buffer)
+
+	err := t.Execute(buf, workout)
+	if err != nil {
+		log.Printf("error executing text template %v\n", err)
+	}
+
+	return buf.String()
 }
 
 type Exercise struct {
@@ -159,10 +177,6 @@ func CombineWorkouts(workouts []Workout) []Workout {
 	}
 
 	return finalWorkouts
-}
-
-func (workout *Workout) String() string {
-	return "BLAH"
 }
 
 func parseWorkoutDuration(duration string) (time.Duration, error) {
