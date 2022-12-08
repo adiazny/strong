@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -232,7 +233,7 @@ func parseFloat(input string) (float64, error) {
 		return 0, fmt.Errorf("error parsing float from string for %w", err)
 	}
 
-	return float, nil
+	return math.RoundToEven(float), nil
 }
 
 func filterWorkouts(workouts []Workout, matchFunc func(workout Workout) bool) []Workout {

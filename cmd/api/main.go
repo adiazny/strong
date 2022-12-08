@@ -50,12 +50,12 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 5000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.StringVar(&cfg.oauthConfig.ClientID, "client", "", "Strava API Client ID")
-	flag.StringVar(&cfg.oauthConfig.ClientSecret, "secret", "", "Strava API Client Secret")
+	flag.StringVar(&cfg.oauthConfig.ClientID, "client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
+	flag.StringVar(&cfg.oauthConfig.ClientSecret, "secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
 
 	flag.Parse()
 
-	file, err := os.Open("./strong_one_test.csv")
+	file, err := os.Open("./strong_two_test.csv")
 	if err != nil {
 		log.Printf("error opening file %v\n", err)
 		os.Exit(1)
