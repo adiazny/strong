@@ -17,9 +17,8 @@ strong app workout logs published to strava
 # Google Drive API
 - [Google Drive API](https://developers.google.com/drive/api) - [Google Workspace](https://developers.google.com/workspace/guides/get-started) - [Google Drive Activity API](https://developers.google.com/drive/activity/v2)
 
-
 ## Research
-- VSCode extention to work with csv files: edit CSV
+- VSCode extention to work with csv files: Edit CSV
 - Golang csv libraries
     - Standard library: https://pkg.go.dev/encoding/csv@go1.19.3
 easy-working-with-csv-in-golang-using-gocsv-package-9c8424728bbe
@@ -28,4 +27,3 @@ easy-working-with-csv-in-golang-using-gocsv-package-9c8424728bbe
                 - https://articles.wesionary.team/read-and-write-csv-file-in-go-b445e34968e9
                 - https://articles.wesionary.team/
         - https://github.com/jszwec/csvutil
-

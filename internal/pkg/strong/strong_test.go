@@ -56,7 +56,7 @@ func TestConvertRecords(t *testing.T) {
 					Name: "Squat (Barbell)",
 					Sets: []strong.Set{{
 						Id:     2,
-						Weight: 74.99999999999999,
+						Weight: 75,
 						Reps:   5,
 					}},
 				}},
@@ -79,7 +79,7 @@ func TestConvertRecords(t *testing.T) {
 					Name: "Squat (Barbell)",
 					Sets: []strong.Set{{
 						Id:     2,
-						Weight: 74.99999999999999,
+						Weight: 75,
 						Reps:   5,
 					}},
 				}},
@@ -102,7 +102,7 @@ func TestConvertRecords(t *testing.T) {
 					Name: "Squat (Barbell)",
 					Sets: []strong.Set{{
 						Id:     2,
-						Weight: 74.99999999999999,
+						Weight: 75,
 						Reps:   5,
 					}},
 				}},
@@ -165,7 +165,7 @@ func TestCombineWorkouts(t *testing.T) {
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
 									Id:     1,
-									Weight: 44.99999997795377,
+									Weight: 45,
 									Reps:   5},
 								},
 							},
@@ -180,7 +180,7 @@ func TestCombineWorkouts(t *testing.T) {
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
 									Id:     2,
-									Weight: 74.99999999999999,
+									Weight: 75,
 									Reps:   5},
 								},
 							},
@@ -195,7 +195,7 @@ func TestCombineWorkouts(t *testing.T) {
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
 									Id:     3,
-									Weight: 95.0,
+									Weight: 95,
 									Reps:   3},
 								},
 							},
@@ -213,7 +213,7 @@ func TestCombineWorkouts(t *testing.T) {
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
 								Id:     1,
-								Weight: 44.99999997795377,
+								Weight: 45,
 								Reps:   5},
 							},
 						},
@@ -221,7 +221,7 @@ func TestCombineWorkouts(t *testing.T) {
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
 								Id:     2,
-								Weight: 74.99999999999999,
+								Weight: 75,
 								Reps:   5},
 							},
 						},
@@ -229,7 +229,7 @@ func TestCombineWorkouts(t *testing.T) {
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
 								Id:     3,
-								Weight: 95.0,
+								Weight: 95,
 								Reps:   3},
 							},
 						},
@@ -250,7 +250,7 @@ func TestCombineWorkouts(t *testing.T) {
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
 									Id:     1,
-									Weight: 44.99999997795377,
+									Weight: 45,
 									Reps:   5},
 								},
 							},
@@ -265,7 +265,7 @@ func TestCombineWorkouts(t *testing.T) {
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
 									Id:     2,
-									Weight: 74.99999999999999,
+									Weight: 75,
 									Reps:   5},
 								},
 							},
@@ -280,7 +280,7 @@ func TestCombineWorkouts(t *testing.T) {
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
 									Id:     3,
-									Weight: 95.0,
+									Weight: 95,
 									Reps:   3},
 								},
 							},
@@ -313,7 +313,7 @@ func TestCombineWorkouts(t *testing.T) {
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
 								Id:     1,
-								Weight: 44.99999997795377,
+								Weight: 45,
 								Reps:   5},
 							},
 						},
@@ -321,7 +321,7 @@ func TestCombineWorkouts(t *testing.T) {
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
 								Id:     2,
-								Weight: 74.99999999999999,
+								Weight: 75,
 								Reps:   5},
 							},
 						},
@@ -329,7 +329,7 @@ func TestCombineWorkouts(t *testing.T) {
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
 								Id:     3,
-								Weight: 95.0,
+								Weight: 95,
 								Reps:   3},
 							},
 						},
