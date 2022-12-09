@@ -22,7 +22,7 @@
 
 # Program Binary
 main
-cmd/strong
+cmd/api/strong
 
 # ZIP files
 *.zip
