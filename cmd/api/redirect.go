@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/adiazny/strong/internal/pkg/strava"
+	"github.com/adiazny/strong/internal/pkg/strong"
 )
 
 // redirectHandler will handle posting Strong completed workouts to Strava activities api
@@ -37,19 +38,34 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	// 3) convert completed workouts to strava activity
+	// 3) Get latest strava athlete activity
+	stravaActivities, err := app.stravaClient.GetActivities(r.Context(), token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// 4) filter strong completed workouts based off latest strava activity
+	filteredStrongWorkouts := strong.FilterWorkouts(app.strongConfig.CompletedWorkouts, func(workout strong.Workout) bool {
+		return workout.Date > stravaActivities[0].StartDateLocal
+	})
+
+	app.log.Println("Strava Activity:", stravaActivities[0].StartDateLocal)
+
+	app.log.Println("Filtered Workout:", filteredStrongWorkouts)
+
+	// 5) convert completed workouts to strava activity
 	activities := make([]strava.Actvitiy, 0)
 
-	for _, workout := range app.strongConfig.CompletedWorkouts {
+	for _, workout := range filteredStrongWorkouts {
 		activity, err := app.stravaClient.MapStrongWorkout(workout)
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 		activities = append(activities, activity)
 	}
 
-	// 4) Get latest strava athlete activity
-	// 5) filter strong completed workouts based off latest strava activity
 	// 6) post to strava api/activity
 	for _, activity := range activities {
 		err := app.stravaClient.PostActivity(r.Context(), token, activity)

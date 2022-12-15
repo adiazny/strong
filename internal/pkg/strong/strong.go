@@ -159,7 +159,7 @@ func CombineWorkouts(workouts []Workout) []Workout {
 	for date := range dateSet {
 		exercises := make([]Exercise, 0)
 
-		filteredWorkouts := filterWorkouts(workouts, func(workout Workout) bool {
+		filteredWorkouts := FilterWorkouts(workouts, func(workout Workout) bool {
 			return workout.Date == date
 		})
 
@@ -236,7 +236,7 @@ func parseFloat(input string) (float64, error) {
 	return math.RoundToEven(float), nil
 }
 
-func filterWorkouts(workouts []Workout, matchFunc func(workout Workout) bool) []Workout {
+func FilterWorkouts(workouts []Workout, matchFunc func(workout Workout) bool) []Workout {
 	filteredWorkouts := make([]Workout, 0)
 
 	for _, workout := range workouts {

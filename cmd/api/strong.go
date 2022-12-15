@@ -19,7 +19,8 @@ const (
 	redirectURL        = "http://localhost:4001/v1/redirect"
 	stravaAuthorizeURL = "https://www.strava.com/oauth/authorize"
 	stravaTokenURL     = "https://www.strava.com/oauth/token"
-	stravaAPIScopes    = "activity:write"
+	stravaWriteScope   = "activity:write,activity:read"
+	stravaReadScope    = "activity:read"
 )
 
 type config struct {
@@ -45,7 +46,7 @@ func main() {
 			TokenURL: stravaTokenURL,
 		},
 		RedirectURL: redirectURL,
-		Scopes:      []string{stravaAPIScopes},
+		Scopes:      []string{stravaWriteScope},
 	}
 
 	flag.IntVar(&cfg.port, "port", 5000, "API server port")
@@ -55,7 +56,7 @@ func main() {
 
 	flag.Parse()
 
-	file, err := os.Open("./strong_two_test.csv")
+	file, err := os.Open("./strong.csv")
 	if err != nil {
 		log.Printf("error opening file %v\n", err)
 		os.Exit(1)
@@ -76,6 +77,8 @@ func main() {
 	}
 
 	completeWorkouts := strong.CombineWorkouts(workouts)
+
+	log.Println(completeWorkouts[0])
 
 	strongConfg := &strong.Config{CompletedWorkouts: completeWorkouts}
 
@@ -102,6 +105,8 @@ func main() {
 		log.Printf("starting %s server on %s", cfg.env, srv.Addr)
 		serverErrors <- srv.ListenAndServe()
 	}()
+
+	fmt.Println(cfg.oauthConfig.Scopes)
 
 	url := cfg.oauthConfig.AuthCodeURL("state")
 	log.Println(url)

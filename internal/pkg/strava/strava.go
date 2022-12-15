@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -20,7 +21,12 @@ import (
 // Activity Types:
 // Weight Training, Workout, Ride, Run
 
-const weightTraining = "WeightTraining"
+const (
+	stravaBaseURL  = "https://www.strava.com/api/v3"
+	activitiesPath = "activities"
+	athletePath    = "athlete"
+	weightTraining = "WeightTraining"
+)
 
 type Client struct {
 	*log.Logger
@@ -32,14 +38,14 @@ type Actvitiy struct {
 	SportType      string  `json:"sport_type"`
 	StartDateLocal string  `json:"start_date_local"`
 	Elapsed_time   int     `json:"elapsed_time"`
-	Description    string  `json:"description"`
+	Description    string  `json:"description,omitempty"`
 	Distance       float64 `json:"distance"`
-	Trainer        int     `json:"trainer"`
-	Commute        int     `json:"commute"`
+	Trainer        bool    `json:"trainer"`
+	Commute        bool    `json:"commute"`
 }
 
 func (client *Client) MapStrongWorkout(workout strong.Workout) (Actvitiy, error) {
-	time, err := time.Parse("2006-01-02 15:04:05", workout.Date)
+	startTime, err := time.Parse("2006-01-02 15:04:05", workout.Date)
 	if err != nil {
 		return Actvitiy{}, fmt.Errorf("error parsing time %w", err)
 	}
@@ -47,8 +53,8 @@ func (client *Client) MapStrongWorkout(workout strong.Workout) (Actvitiy, error)
 	return Actvitiy{
 		Name:           workout.Name,
 		SportType:      weightTraining,
-		StartDateLocal: time.Format("2006-01-02T15:04:05Z"),
-		Elapsed_time:   int(workout.Duration.Minutes()),
+		StartDateLocal: startTime.Format("2006-01-02T15:04:05Z"),
+		Elapsed_time:   int(workout.Duration.Seconds()),
 		Description:    workout.String(),
 	}, nil
 }
@@ -61,7 +67,7 @@ func (client *Client) PostActivity(ctx context.Context, token *oauth2.Token, act
 
 	bodyReader := bytes.NewReader(activityData)
 
-	resp, err := client.Client(ctx, token).Post("https://www.strava.com/api/v3/activities", "application/json", bodyReader)
+	resp, err := client.Client(ctx, token).Post(fmt.Sprintf("%s/%s", stravaBaseURL, activitiesPath), "application/json", bodyReader)
 	if err != nil {
 		return fmt.Errorf("error performing http post request: %w", err)
 	}
@@ -73,4 +79,40 @@ func (client *Client) PostActivity(ctx context.Context, token *oauth2.Token, act
 	}
 
 	return nil
+}
+
+func (client *Client) GetActivities(ctx context.Context, token *oauth2.Token) ([]Actvitiy, error) {
+
+	resp, err := client.Client(ctx, token).Get(fmt.Sprintf("%s/%s/%s", stravaBaseURL, athletePath, activitiesPath))
+	if err != nil {
+		return nil, fmt.Errorf("error performing http get request: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	var respBody []byte
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("error reading response body %w", err)
+		}
+
+		client.Logger.Printf("%s", respBody)
+		return nil, fmt.Errorf("error response status code is %d", resp.StatusCode)
+	}
+
+	activities := []Actvitiy{}
+
+	respBody, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body %w", err)
+	}
+
+	err = json.Unmarshal(respBody, &activities)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshling response body %w", err)
+	}
+
+	return activities, nil
 }

@@ -4,6 +4,9 @@ SHELL := /bin/bash
 
 PROJECT_NAME="strong"
 
+run:
+	go run ./cmd/api/ -port 4001
+
 tidy:
 	go mod tidy
 
