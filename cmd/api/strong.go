@@ -56,7 +56,7 @@ func main() {
 
 	flag.Parse()
 
-	file, err := os.Open("./strong.csv")
+	file, err := os.Open("./strong_two_test.csv")
 	if err != nil {
 		log.Printf("error opening file %v\n", err)
 		os.Exit(1)
@@ -77,8 +77,6 @@ func main() {
 	}
 
 	completeWorkouts := strong.CombineWorkouts(workouts)
-
-	log.Println(completeWorkouts[0])
 
 	strongConfg := &strong.Config{CompletedWorkouts: completeWorkouts}
 
@@ -106,12 +104,8 @@ func main() {
 		serverErrors <- srv.ListenAndServe()
 	}()
 
-	fmt.Println(cfg.oauthConfig.Scopes)
-
 	url := cfg.oauthConfig.AuthCodeURL("state")
 	log.Println(url)
-
-	fmt.Println(strongConfg.CompletedWorkouts[0].String())
 
 	// Blocking main.
 	if err := <-serverErrors; err != nil {

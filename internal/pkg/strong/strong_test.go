@@ -238,7 +238,7 @@ func TestCombineWorkouts(t *testing.T) {
 			},
 		},
 		{
-			name: "success with two workout day",
+			name: "success with two workout days",
 			args: args{
 				workouts: []strong.Workout{
 					{
@@ -338,6 +338,121 @@ func TestCombineWorkouts(t *testing.T) {
 				{
 					Name:     "Day B",
 					Date:     "2022-11-16 06:54:38",
+					Duration: 1800000000000,
+					Exercises: []strong.Exercise{
+						{
+							Name: "Deadlift (Barbell)",
+							Sets: []strong.Set{{
+								Id:     1,
+								Weight: 225,
+								Reps:   8},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "success with two workouts same day different times",
+			args: args{
+				workouts: []strong.Workout{
+					{
+						Name:     "Day A morning",
+						Date:     "2022-11-14 07:15:24",
+						Duration: 1800000000000,
+						Exercises: []strong.Exercise{
+							{
+								Name: "Squat (Barbell)",
+								Sets: []strong.Set{{
+									Id:     1,
+									Weight: 45,
+									Reps:   5},
+								},
+							},
+						},
+					},
+					{
+						Name:     "Day A morning",
+						Date:     "2022-11-14 07:15:24",
+						Duration: 1800000000000,
+						Exercises: []strong.Exercise{
+							{
+								Name: "Squat (Barbell)",
+								Sets: []strong.Set{{
+									Id:     2,
+									Weight: 75,
+									Reps:   5},
+								},
+							},
+						},
+					},
+					{
+						Name:     "Day A morning",
+						Date:     "2022-11-14 07:15:24",
+						Duration: 1800000000000,
+						Exercises: []strong.Exercise{
+							{
+								Name: "Squat (Barbell)",
+								Sets: []strong.Set{{
+									Id:     3,
+									Weight: 95,
+									Reps:   3},
+								},
+							},
+						},
+					},
+					{
+						Name:     "Day A afternoon",
+						Date:     "2022-11-14 15:30:00",
+						Duration: 1800000000000,
+						Exercises: []strong.Exercise{
+							{
+								Name: "Deadlift (Barbell)",
+								Sets: []strong.Set{{
+									Id:     1,
+									Weight: 225,
+									Reps:   8},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []strong.Workout{
+				{
+					Name:     "Day A morning",
+					Date:     "2022-11-14 07:15:24",
+					Duration: 1800000000000,
+					Exercises: []strong.Exercise{
+						{
+							Name: "Squat (Barbell)",
+							Sets: []strong.Set{{
+								Id:     1,
+								Weight: 45,
+								Reps:   5},
+							},
+						},
+						{
+							Name: "Squat (Barbell)",
+							Sets: []strong.Set{{
+								Id:     2,
+								Weight: 75,
+								Reps:   5},
+							},
+						},
+						{
+							Name: "Squat (Barbell)",
+							Sets: []strong.Set{{
+								Id:     3,
+								Weight: 95,
+								Reps:   3},
+							},
+						},
+					},
+				},
+				{
+					Name:     "Day A afternoon",
+					Date:     "2022-11-14 15:30:00",
 					Duration: 1800000000000,
 					Exercises: []strong.Exercise{
 						{
