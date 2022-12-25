@@ -56,7 +56,7 @@ func main() {
 
 	flag.Parse()
 
-	file, err := os.Open("./strong_two_test.csv")
+	file, err := os.Open("./strong.csv")
 	if err != nil {
 		log.Printf("error opening file %v\n", err)
 		os.Exit(1)

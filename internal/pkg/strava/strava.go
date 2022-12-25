@@ -14,13 +14,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// Model strava actvitiy
-// Parse stong workout to strava activity
-// Send POST request to strava api /activities
-
-// Activity Types:
-// Weight Training, Workout, Ride, Run
-
 const (
 	stravaBaseURL  = "https://www.strava.com/api/v3"
 	activitiesPath = "activities"
@@ -59,6 +52,42 @@ func (client *Client) MapStrongWorkout(workout strong.Workout) (Actvitiy, error)
 	}, nil
 }
 
+func (client *Client) GetActivities(ctx context.Context, token *oauth2.Token) ([]Actvitiy, error) {
+	resp, err := client.Client(ctx, token).Get(fmt.Sprintf("%s/%s/%s", stravaBaseURL, athletePath, activitiesPath))
+	if err != nil {
+		return nil, fmt.Errorf("error performing http get request: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	var respBody []byte
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("error reading response body %w", err)
+		}
+
+		client.Logger.Printf("%s\n", respBody)
+
+		return nil, fmt.Errorf("error response status code is %d", resp.StatusCode)
+	}
+
+	activities := []Actvitiy{}
+
+	respBody, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body %w", err)
+	}
+
+	err = json.Unmarshal(respBody, &activities)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshling response body %w", err)
+	}
+
+	return activities, nil
+}
+
 func (client *Client) PostActivity(ctx context.Context, token *oauth2.Token, activity Actvitiy) error {
 	activityData, err := json.Marshal(activity)
 	if err != nil {
@@ -79,40 +108,4 @@ func (client *Client) PostActivity(ctx context.Context, token *oauth2.Token, act
 	}
 
 	return nil
-}
-
-func (client *Client) GetActivities(ctx context.Context, token *oauth2.Token) ([]Actvitiy, error) {
-
-	resp, err := client.Client(ctx, token).Get(fmt.Sprintf("%s/%s/%s", stravaBaseURL, athletePath, activitiesPath))
-	if err != nil {
-		return nil, fmt.Errorf("error performing http get request: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	var respBody []byte
-
-	if resp.StatusCode != http.StatusOK {
-		respBody, err = io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("error reading response body %w", err)
-		}
-
-		client.Logger.Printf("%s", respBody)
-		return nil, fmt.Errorf("error response status code is %d", resp.StatusCode)
-	}
-
-	activities := []Actvitiy{}
-
-	respBody, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body %w", err)
-	}
-
-	err = json.Unmarshal(respBody, &activities)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshling response body %w", err)
-	}
-
-	return activities, nil
 }
