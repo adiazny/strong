@@ -48,7 +48,7 @@ func (client *Client) MapStrongWorkout(workout strong.Workout) (Actvitiy, error)
 		SportType:      weightTraining,
 		StartDateLocal: startTime.Format("2006-01-02T15:04:05Z"),
 		Elapsed_time:   int(workout.Duration.Seconds()),
-		Description:    workout.String(),
+		Description:    workout.Description(),
 	}, nil
 }
 

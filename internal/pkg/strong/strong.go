@@ -1,26 +1,14 @@
 package strong
 
 import (
-	"bytes"
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
-	"math"
 	"sort"
 	"strconv"
 	"strings"
-	"text/template"
 	"time"
 )
-
-const WorkoutTemplate = `
-{{.Name}}
-{{.Date}}
-
-{{range $exercise := .Exercises}}{{range .Sets}}{{$exercise.Name}} Set {{.Id}}: {{.Weight}}# x {{.Reps}}{{end}}
-{{end}}
-`
 
 type Config struct {
 	CompletedWorkouts []Workout
@@ -33,17 +21,25 @@ type Workout struct {
 	Exercises []Exercise
 }
 
-func (workout *Workout) String() string {
-	t := template.Must(template.New("workoutLog").Parse(WorkoutTemplate))
+func (workout *Workout) Description() string {
+	var stringBuilder strings.Builder
 
-	buf := new(bytes.Buffer)
+	exercises := make(map[string]struct{})
 
-	err := t.Execute(buf, workout)
-	if err != nil {
-		log.Printf("error executing text template %v\n", err)
+	for _, exercise := range workout.Exercises {
+		if _, ok := exercises[exercise.Name]; !ok {
+			exercises[exercise.Name] = struct{}{}
+			fmt.Fprintf(&stringBuilder, "\n%s\n", exercise.Name)
+		}
+
+		for _, set := range exercise.Sets {
+			fmt.Fprintf(&stringBuilder, "Set %d: %.1f# x %d", set.Id, set.Weight, set.Reps)
+		}
+
+		stringBuilder.WriteString("\n")
 	}
 
-	return buf.String()
+	return stringBuilder.String()
 }
 
 type Exercise struct {
@@ -214,28 +210,6 @@ func parseWorkoutDuration(duration string) (time.Duration, error) {
 	}
 }
 
-func parseSetDuration(duration string) (time.Duration, error) {
-	setDurationInSeconds, err := strconv.ParseInt(duration, 10, 0)
-	if err != nil {
-		return 0, fmt.Errorf("error parsing float from string for record index 8 %w", err)
-	}
-
-	return time.Duration(setDurationInSeconds) * time.Second, nil
-}
-
-func parseFloat(input string) (float64, error) {
-	if input == "" {
-		return 0, nil
-	}
-
-	float, err := strconv.ParseFloat(input, 64)
-	if err != nil {
-		return 0, fmt.Errorf("error parsing float from string for %w", err)
-	}
-
-	return math.RoundToEven(float), nil
-}
-
 func FilterWorkouts(workouts []Workout, matchFunc func(workout Workout) bool) []Workout {
 	filteredWorkouts := make([]Workout, 0)
 
@@ -261,4 +235,26 @@ func GetLatestWorkout(completedWorkouts []Workout) Workout {
 	})
 
 	return completedWorkouts[0]
+}
+
+func parseSetDuration(duration string) (time.Duration, error) {
+	setDurationInSeconds, err := strconv.ParseInt(duration, 10, 0)
+	if err != nil {
+		return 0, fmt.Errorf("error parsing float from string for record index 8 %w", err)
+	}
+
+	return time.Duration(setDurationInSeconds) * time.Second, nil
+}
+
+func parseFloat(input string) (float64, error) {
+	if input == "" {
+		return 0, nil
+	}
+
+	float, err := strconv.ParseFloat(input, 64)
+	if err != nil {
+		return 0, fmt.Errorf("error parsing float from string for %w", err)
+	}
+
+	return float, nil
 }

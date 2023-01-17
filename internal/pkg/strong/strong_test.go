@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/adiazny/strong/internal/pkg/strong"
 	"github.com/stretchr/testify/assert"
@@ -537,6 +538,112 @@ func TestGetLatestWorkout(t *testing.T) {
 
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetLatestWorkout() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestWorkout_Description(t *testing.T) {
+	type fields struct {
+		Name      string
+		Date      string
+		Duration  time.Duration
+		Exercises []strong.Exercise
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "Test 1",
+			fields: fields{
+				Name:     "Day A",
+				Date:     "Jan 16 2022",
+				Duration: 3600,
+				Exercises: []strong.Exercise{
+					{
+						Name: "Squat (Barbell)",
+						Sets: []strong.Set{{
+							Id:     1,
+							Weight: 45,
+							Reps:   5},
+						},
+					},
+					{
+						Name: "Squat (Barbell)",
+						Sets: []strong.Set{{
+							Id:     2,
+							Weight: 75,
+							Reps:   5},
+						},
+					},
+					{
+						Name: "Squat (Barbell)",
+						Sets: []strong.Set{{
+							Id:     3,
+							Weight: 95,
+							Reps:   3},
+						},
+					},
+					{
+						Name: "Squat (Barbell)",
+						Sets: []strong.Set{{
+							Id:     1,
+							Weight: 45,
+							Reps:   5},
+						},
+					},
+					{
+						Name: "Squat (Barbell)",
+						Sets: []strong.Set{{
+							Id:     2,
+							Weight: 75,
+							Reps:   5},
+						},
+					},
+					{
+						Name: "Deadlift (Barbell)",
+						Sets: []strong.Set{{
+							Id:     3,
+							Weight: 200,
+							Reps:   3},
+						},
+					},
+					{
+						Name: "Deadlift (Barbell)",
+						Sets: []strong.Set{{
+							Id:     3,
+							Weight: 300,
+							Reps:   3},
+						},
+					},
+				},
+			},
+			want: `
+Squat (Barbell)
+Set 1: 45.0# x 5
+Set 2: 75.0# x 5
+Set 3: 95.0# x 3
+Set 1: 45.0# x 5
+Set 2: 75.0# x 5
+
+Deadlift (Barbell)
+Set 3: 200.0# x 3
+Set 3: 300.0# x 3
+`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			workout := &strong.Workout{
+				Name:      tt.fields.Name,
+				Date:      tt.fields.Date,
+				Duration:  tt.fields.Duration,
+				Exercises: tt.fields.Exercises,
+			}
+			if got := workout.Description(); got != tt.want {
+				t.Errorf("Workout.Description() = %v, want %v", got, tt.want)
 			}
 		})
 	}
