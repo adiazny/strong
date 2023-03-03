@@ -183,15 +183,22 @@ func parseWorkoutDuration(duration string) (time.Duration, error) {
 		return 0, nil
 	}
 
-	switch len(split) {
-	case 1:
+	switch {
+	case len(split) == 1 && strings.Contains(split[0], "m"):
 		min, err := strconv.Atoi(strings.TrimSuffix(split[0], "m"))
 		if err != nil {
 			return 0, fmt.Errorf("error converting string to int %w", err)
 		}
 
 		return time.Minute * time.Duration(min), nil
-	case 2:
+	case len(split) == 1 && strings.Contains(split[0], "h"):
+		hour, err := strconv.Atoi(strings.TrimSuffix(split[0], "h"))
+		if err != nil {
+			return 0, fmt.Errorf("error converting string to int %w", err)
+		}
+
+		return time.Minute * time.Duration(hour*60), nil
+	case len(split) == 2:
 		hours, err := strconv.Atoi(strings.TrimSuffix(split[0], "h"))
 		if err != nil {
 			return 0, fmt.Errorf("error converting string to int %w", err)

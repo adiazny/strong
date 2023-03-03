@@ -50,13 +50,10 @@ func TestMapStrongWorkout(t *testing.T) {
 		StartDateLocal: "2022-11-14T07:15:24Z",
 		Elapsed_time:   1800,
 		Description: `
-Day A
-2022-11-14 07:15:24
-
-Squat (Barbell) Set 1: 45# x 5
-Squat (Barbell) Set 2: 75# x 5
-Squat (Barbell) Set 3: 95# x 3
-
+Squat (Barbell)
+Set 1: 45.0# x 5
+Set 2: 75.0# x 5
+Set 3: 95.0# x 3
 `,
 	}
 

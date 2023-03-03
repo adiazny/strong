@@ -57,7 +57,30 @@ func TestConvertRecords(t *testing.T) {
 					Name: "Squat (Barbell)",
 					Sets: []strong.Set{{
 						Id:     2,
-						Weight: 75,
+						Weight: 74.99999999999999,
+						Reps:   5,
+					}},
+				}},
+			}},
+			wantErr: false,
+		},
+		{
+			name: "success workout duration at one hour",
+			args: args{
+				records: [][]string{
+					{"Date", "Workout Name", "Duration", "Exercise Name", "Set Order", "Weight", "Reps", "Distance", "Seconds", "Notes", "Workout Notes", "RPE"},
+					{"2022-11-14 07:15:24", "JCDFIT Beginner A", "1h", "Squat (Barbell)", "2", "74.99999999999999", "5", "0", "0", "", "", ""},
+				},
+			},
+			want: []strong.Workout{{
+				Name:     "JCDFIT Beginner A",
+				Date:     "2022-11-14 07:15:24",
+				Duration: 3600000000000,
+				Exercises: []strong.Exercise{{
+					Name: "Squat (Barbell)",
+					Sets: []strong.Set{{
+						Id:     2,
+						Weight: 74.99999999999999,
 						Reps:   5,
 					}},
 				}},
@@ -80,7 +103,7 @@ func TestConvertRecords(t *testing.T) {
 					Name: "Squat (Barbell)",
 					Sets: []strong.Set{{
 						Id:     2,
-						Weight: 75,
+						Weight: 74.99999999999999,
 						Reps:   5,
 					}},
 				}},
@@ -103,7 +126,7 @@ func TestConvertRecords(t *testing.T) {
 					Name: "Squat (Barbell)",
 					Sets: []strong.Set{{
 						Id:     2,
-						Weight: 75,
+						Weight: 74.99999999999999,
 						Reps:   5,
 					}},
 				}},

@@ -40,14 +40,11 @@ type application struct {
 /*
 	Google Drive:
 	> Authorize and Authenticate
+	>> Look into service accounts https://developers.google.com/identity/protocols/oauth2/service-account
 	> Get google activity for mydrive/Fitness/strong_app_workout_logs folder
 	> Filter latest create/upload "strong.csv" file
 	> Download latest create/upload "strong.csv" file
 
-	Strong and Strava:
-	> Process (pass) strong.csv to create strong workouts
-	> Convert strong workout to strava activities
-	> Post strava activities to strava apis
 */
 
 func main() {
