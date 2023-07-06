@@ -7,6 +7,14 @@ strong app workout logs published to strava
 - Parse and convert workouts to Go workout structs
 - Send workouts to Strava API
 
+# Project Structure
+- `bin`: contains compiled application binaries, ready for deployment to a production server
+- `cmd/api`: contains application-specific code for the Strong API application. Includes the code for running the server, reading and writing HTTP requests and managing authentication.
+- `internal`: contains various ancillary packages used by the Strong API. It will contain the code for interacting with external services, doing data validation and so on. Basically, any code which isn’t application-specific and can potentially be reused will live in here. The Go code under cmd/api will import the packages in the internal directory (but never the other way around).
+- `remote`: contains the configuration files and setup scripts for the production server
+- `go.mod`: file will declare our project dependencies, versions and module path.
+- `Makefile`: file will contain recipes for automating common administrative tasks — like auditing the Go code, building binaries, and executing various commands
+
 ## The Power of Go Tests
 
 "write calling code that is sensible, readable, and useful, and only then proceed to implement everything necessary to make it work."
@@ -16,14 +24,6 @@ strong app workout logs published to strava
 
 # Google Drive API
 - [Google Drive API](https://developers.google.com/drive/api) - [Google Workspace](https://developers.google.com/workspace/guides/get-started) - [Google Drive Activity API](https://developers.google.com/drive/activity/v2)
-
-# Project Structure
-- `bin`: contains compiled application binaries, ready for deployment to a production server
-- `cmd/api`: contains application-specific code for the Strong API application. Includes the code for running the server, reading and writing HTTP requests and managing authentication.
-- `internal`: contains various ancillary packages used by the Strong API. It will contain the code for interacting with external services, doing data validation and so on. Basically, any code which isn’t application-specific and can potentially be reused will live in here. The Go code under cmd/api will import the packages in the internal directory (but never the other way around).
-- `remote`: contains the configuration files and setup scripts for the production server
-- `go.mod`: file will declare our project dependencies, versions and module path.
-- `Makefile`: file will contain recipes for automating common administrative tasks — like auditing the Go code, building binaries, and executing various commands
 
 ## Research
 - VSCode extention to work with csv files: Edit CSV
