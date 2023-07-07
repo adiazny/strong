@@ -33,7 +33,7 @@ func (workout *Workout) Description() string {
 		}
 
 		for _, set := range exercise.Sets {
-			fmt.Fprintf(&stringBuilder, "Set %d: %.1f# x %d", set.Id, set.Weight, set.Reps)
+			fmt.Fprintf(&stringBuilder, "Set %d: %.1f# x %d", set.ID, set.Weight, set.Reps)
 		}
 
 		stringBuilder.WriteString("\n")
@@ -48,7 +48,7 @@ type Exercise struct {
 }
 
 type Set struct {
-	Id           int
+	ID           int
 	Weight       float64
 	Reps         int
 	Distance     float64
@@ -82,7 +82,7 @@ func ConvertRecords(records [][]string) ([]Workout, error) {
 			return nil, err
 		}
 
-		setId, err := strconv.Atoi(record[4])
+		setID, err := strconv.Atoi(record[4])
 		if err != nil {
 			return nil, fmt.Errorf("error converting string to int for record index 4 %w", err)
 		}
@@ -119,7 +119,7 @@ func ConvertRecords(records [][]string) ([]Workout, error) {
 			Exercises: []Exercise{{
 				Name: record[3],
 				Sets: []Set{{
-					Id:           setId,
+					ID:           setID,
 					Weight:       weight,
 					Reps:         reps,
 					Distance:     distance,

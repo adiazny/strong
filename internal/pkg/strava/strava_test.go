@@ -20,7 +20,7 @@ func TestMapStrongWorkout(t *testing.T) {
 			{
 				Name: "Squat (Barbell)",
 				Sets: []strong.Set{{
-					Id:     1,
+					ID:     1,
 					Weight: 45.0,
 					Reps:   5},
 				},
@@ -28,7 +28,7 @@ func TestMapStrongWorkout(t *testing.T) {
 			{
 				Name: "Squat (Barbell)",
 				Sets: []strong.Set{{
-					Id:     2,
+					ID:     2,
 					Weight: 75.0,
 					Reps:   5},
 				},
@@ -36,7 +36,7 @@ func TestMapStrongWorkout(t *testing.T) {
 			{
 				Name: "Squat (Barbell)",
 				Sets: []strong.Set{{
-					Id:     3,
+					ID:     3,
 					Weight: 95.0,
 					Reps:   3},
 				},
@@ -48,7 +48,7 @@ func TestMapStrongWorkout(t *testing.T) {
 		Name:           "Day A",
 		SportType:      "WeightTraining",
 		StartDateLocal: "2022-11-14T07:15:24Z",
-		Elapsed_time:   1800,
+		ElapsedTime:    1800,
 		Description: `
 Squat (Barbell)
 Set 1: 45.0# x 5
