@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
@@ -46,12 +48,19 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 
 	// 4) filter strong completed workouts based off latest strava activity
 	filteredStrongWorkouts := strong.FilterWorkouts(app.strongConfig.CompletedWorkouts, func(workout strong.Workout) bool {
-		return workout.Date > stravaActivities[0].StartDateLocal
+		startTime, err := time.Parse("2006-01-02 15:04:05", workout.Date)
+		if err != nil {
+			return false
+		}
+
+		result := false
+
+		for _, activity := range stravaActivities {
+			result = !strings.Contains(activity.StartDateLocal, startTime.String())
+		}
+
+		return result
 	})
-
-	app.log.Println("Strava Activity:", stravaActivities[0].StartDateLocal)
-
-	app.log.Println("Filtered Workout:", filteredStrongWorkouts)
 
 	// 5) convert completed workouts to strava activity
 	activities := make([]strava.Actvitiy, 0)
@@ -64,6 +73,12 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		activities = append(activities, activity)
+	}
+
+	if len(activities) == 0 {
+		fmt.Fprint(w, "No workout to post to strava")
+
+		return
 	}
 
 	// 6) post to strava api/activity
