@@ -13,7 +13,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const version = "1.0.0"
+const version = "1.1.0"
 
 const (
 	redirectURL        = "http://localhost:4001/v1/redirect"
@@ -51,6 +51,7 @@ func main() {
 	log := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	var cfg config
+
 	cfg.oauthConfig = &oauth2.Config{
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  stravaAuthorizeURL,
@@ -64,7 +65,6 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 	flag.StringVar(&cfg.oauthConfig.ClientID, "client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
 	flag.StringVar(&cfg.oauthConfig.ClientSecret, "secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
-
 	flag.Parse()
 
 	file, err := os.Open("./strong.csv")

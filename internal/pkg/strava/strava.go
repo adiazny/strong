@@ -30,7 +30,7 @@ type Actvitiy struct {
 	Name           string  `json:"name"`
 	SportType      string  `json:"sport_type"`
 	StartDateLocal string  `json:"start_date_local"`
-	Elapsed_time   int     `json:"elapsed_time"`
+	ElapsedTime    int     `json:"elapsed_time"`
 	Description    string  `json:"description,omitempty"`
 	Distance       float64 `json:"distance"`
 	Trainer        bool    `json:"trainer"`
@@ -47,7 +47,7 @@ func (client *Client) MapStrongWorkout(workout strong.Workout) (Actvitiy, error)
 		Name:           workout.Name,
 		SportType:      weightTraining,
 		StartDateLocal: startTime.Format("2006-01-02T15:04:05Z"),
-		Elapsed_time:   int(workout.Duration.Seconds()),
+		ElapsedTime:    int(workout.Duration.Seconds()),
 		Description:    workout.Description(),
 	}, nil
 }

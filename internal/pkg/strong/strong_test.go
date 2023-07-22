@@ -56,7 +56,7 @@ func TestConvertRecords(t *testing.T) {
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
 					Sets: []strong.Set{{
-						Id:     2,
+						ID:     2,
 						Weight: 74.99999999999999,
 						Reps:   5,
 					}},
@@ -79,7 +79,7 @@ func TestConvertRecords(t *testing.T) {
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
 					Sets: []strong.Set{{
-						Id:     2,
+						ID:     2,
 						Weight: 74.99999999999999,
 						Reps:   5,
 					}},
@@ -102,7 +102,7 @@ func TestConvertRecords(t *testing.T) {
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
 					Sets: []strong.Set{{
-						Id:     2,
+						ID:     2,
 						Weight: 74.99999999999999,
 						Reps:   5,
 					}},
@@ -125,7 +125,7 @@ func TestConvertRecords(t *testing.T) {
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
 					Sets: []strong.Set{{
-						Id:     2,
+						ID:     2,
 						Weight: 74.99999999999999,
 						Reps:   5,
 					}},
@@ -188,7 +188,7 @@ func TestCombineWorkouts(t *testing.T) {
 							{
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
-									Id:     1,
+									ID:     1,
 									Weight: 45,
 									Reps:   5},
 								},
@@ -203,7 +203,7 @@ func TestCombineWorkouts(t *testing.T) {
 							{
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
-									Id:     2,
+									ID:     2,
 									Weight: 75,
 									Reps:   5},
 								},
@@ -218,7 +218,7 @@ func TestCombineWorkouts(t *testing.T) {
 							{
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
-									Id:     3,
+									ID:     3,
 									Weight: 95,
 									Reps:   3},
 								},
@@ -236,7 +236,7 @@ func TestCombineWorkouts(t *testing.T) {
 						{
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
-								Id:     1,
+								ID:     1,
 								Weight: 45,
 								Reps:   5},
 							},
@@ -244,7 +244,7 @@ func TestCombineWorkouts(t *testing.T) {
 						{
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
-								Id:     2,
+								ID:     2,
 								Weight: 75,
 								Reps:   5},
 							},
@@ -252,7 +252,7 @@ func TestCombineWorkouts(t *testing.T) {
 						{
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
-								Id:     3,
+								ID:     3,
 								Weight: 95,
 								Reps:   3},
 							},
@@ -273,7 +273,7 @@ func TestCombineWorkouts(t *testing.T) {
 							{
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
-									Id:     1,
+									ID:     1,
 									Weight: 45,
 									Reps:   5},
 								},
@@ -288,7 +288,7 @@ func TestCombineWorkouts(t *testing.T) {
 							{
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
-									Id:     2,
+									ID:     2,
 									Weight: 75,
 									Reps:   5},
 								},
@@ -303,7 +303,7 @@ func TestCombineWorkouts(t *testing.T) {
 							{
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
-									Id:     3,
+									ID:     3,
 									Weight: 95,
 									Reps:   3},
 								},
@@ -318,7 +318,7 @@ func TestCombineWorkouts(t *testing.T) {
 							{
 								Name: "Deadlift (Barbell)",
 								Sets: []strong.Set{{
-									Id:     1,
+									ID:     1,
 									Weight: 225,
 									Reps:   8},
 								},
@@ -336,7 +336,7 @@ func TestCombineWorkouts(t *testing.T) {
 						{
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
-								Id:     1,
+								ID:     1,
 								Weight: 45,
 								Reps:   5},
 							},
@@ -344,7 +344,7 @@ func TestCombineWorkouts(t *testing.T) {
 						{
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
-								Id:     2,
+								ID:     2,
 								Weight: 75,
 								Reps:   5},
 							},
@@ -352,7 +352,7 @@ func TestCombineWorkouts(t *testing.T) {
 						{
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
-								Id:     3,
+								ID:     3,
 								Weight: 95,
 								Reps:   3},
 							},
@@ -367,7 +367,7 @@ func TestCombineWorkouts(t *testing.T) {
 						{
 							Name: "Deadlift (Barbell)",
 							Sets: []strong.Set{{
-								Id:     1,
+								ID:     1,
 								Weight: 225,
 								Reps:   8},
 							},
@@ -388,7 +388,7 @@ func TestCombineWorkouts(t *testing.T) {
 							{
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
-									Id:     1,
+									ID:     1,
 									Weight: 45,
 									Reps:   5},
 								},
@@ -403,7 +403,7 @@ func TestCombineWorkouts(t *testing.T) {
 							{
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
-									Id:     2,
+									ID:     2,
 									Weight: 75,
 									Reps:   5},
 								},
@@ -418,7 +418,7 @@ func TestCombineWorkouts(t *testing.T) {
 							{
 								Name: "Squat (Barbell)",
 								Sets: []strong.Set{{
-									Id:     3,
+									ID:     3,
 									Weight: 95,
 									Reps:   3},
 								},
@@ -433,7 +433,7 @@ func TestCombineWorkouts(t *testing.T) {
 							{
 								Name: "Deadlift (Barbell)",
 								Sets: []strong.Set{{
-									Id:     1,
+									ID:     1,
 									Weight: 225,
 									Reps:   8},
 								},
@@ -451,7 +451,7 @@ func TestCombineWorkouts(t *testing.T) {
 						{
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
-								Id:     1,
+								ID:     1,
 								Weight: 45,
 								Reps:   5},
 							},
@@ -459,7 +459,7 @@ func TestCombineWorkouts(t *testing.T) {
 						{
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
-								Id:     2,
+								ID:     2,
 								Weight: 75,
 								Reps:   5},
 							},
@@ -467,7 +467,7 @@ func TestCombineWorkouts(t *testing.T) {
 						{
 							Name: "Squat (Barbell)",
 							Sets: []strong.Set{{
-								Id:     3,
+								ID:     3,
 								Weight: 95,
 								Reps:   3},
 							},
@@ -482,7 +482,7 @@ func TestCombineWorkouts(t *testing.T) {
 						{
 							Name: "Deadlift (Barbell)",
 							Sets: []strong.Set{{
-								Id:     1,
+								ID:     1,
 								Weight: 225,
 								Reps:   8},
 							},
@@ -588,7 +588,7 @@ func TestWorkout_Description(t *testing.T) {
 					{
 						Name: "Squat (Barbell)",
 						Sets: []strong.Set{{
-							Id:     1,
+							ID:     1,
 							Weight: 45,
 							Reps:   5},
 						},
@@ -596,7 +596,7 @@ func TestWorkout_Description(t *testing.T) {
 					{
 						Name: "Squat (Barbell)",
 						Sets: []strong.Set{{
-							Id:     2,
+							ID:     2,
 							Weight: 75,
 							Reps:   5},
 						},
@@ -604,7 +604,7 @@ func TestWorkout_Description(t *testing.T) {
 					{
 						Name: "Squat (Barbell)",
 						Sets: []strong.Set{{
-							Id:     3,
+							ID:     3,
 							Weight: 95,
 							Reps:   3},
 						},
@@ -612,7 +612,7 @@ func TestWorkout_Description(t *testing.T) {
 					{
 						Name: "Squat (Barbell)",
 						Sets: []strong.Set{{
-							Id:     1,
+							ID:     1,
 							Weight: 45,
 							Reps:   5},
 						},
@@ -620,7 +620,7 @@ func TestWorkout_Description(t *testing.T) {
 					{
 						Name: "Squat (Barbell)",
 						Sets: []strong.Set{{
-							Id:     2,
+							ID:     2,
 							Weight: 75,
 							Reps:   5},
 						},
@@ -628,7 +628,7 @@ func TestWorkout_Description(t *testing.T) {
 					{
 						Name: "Deadlift (Barbell)",
 						Sets: []strong.Set{{
-							Id:     3,
+							ID:     3,
 							Weight: 200,
 							Reps:   3},
 						},
@@ -636,7 +636,7 @@ func TestWorkout_Description(t *testing.T) {
 					{
 						Name: "Deadlift (Barbell)",
 						Sets: []strong.Set{{
-							Id:     3,
+							ID:     3,
 							Weight: 300,
 							Reps:   3},
 						},
