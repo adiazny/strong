@@ -1,7 +1,9 @@
 # strong
 strong app workout logs published to strava
 
-# Program Behavior
+![diagram](strong-diagram.jpg)
+
+# Program Behavior Goals
 - Get the strong app csv workout log file from Google Drive API
 - Read the strong.csv workout log file
 - Parse and convert workouts to Go workout structs
