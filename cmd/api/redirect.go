@@ -46,6 +46,11 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
+	//what format is the strong date?
+	for _, activity := range app.strongConfig.CompletedWorkouts {
+		fmt.Println("STRONG_DATE_TIME", activity.Date)
+	}
+
 	// 4) filter strong completed workouts based off latest strava activity
 	filteredStrongWorkouts := strong.FilterWorkouts(app.strongConfig.CompletedWorkouts, func(workout strong.Workout) bool {
 		startTime, err := time.Parse("2006-01-02 15:04:05", workout.Date)
@@ -82,12 +87,12 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 6) post to strava api/activity
-	for _, activity := range activities {
-		err := app.stravaClient.PostActivity(r.Context(), token, activity)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	}
+	// for _, activity := range activities {
+	// 	err := app.stravaClient.PostActivity(r.Context(), token, activity)
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	}
+	// }
 
 	// 7) optionally shutdown server on successful posts to strava api
 
