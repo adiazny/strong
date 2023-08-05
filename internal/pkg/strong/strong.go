@@ -72,8 +72,12 @@ func ReadCSV(input io.Reader) ([][]string, error) {
 func ConvertRecords(records [][]string) ([]Workout, error) {
 	var workouts []Workout
 
-	for _, record := range records {
-		dateTime, err := formatDateTime(record[0])
+	for i, record := range records {
+		if i == 0 {
+			continue
+		}
+
+		dateTime, err := FormatDateTime(record[0])
 		if err != nil {
 			return nil, err
 		}
@@ -267,7 +271,7 @@ func parseFloat(input string) (float64, error) {
 	return float, nil
 }
 
-func formatDateTime(dateTime string) (string, error) {
+func FormatDateTime(dateTime string) (string, error) {
 	t, err := time.Parse("2006-01-02 15:04:05", dateTime)
 	if err != nil {
 		return "", err

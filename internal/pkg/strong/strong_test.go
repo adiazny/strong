@@ -2,6 +2,7 @@ package strong_test
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -667,6 +668,37 @@ Set 3: 300.0# x 3
 			}
 			if got := workout.Description(); got != tt.want {
 				t.Errorf("Workout.Description() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFormatDateTime(t *testing.T) {
+
+	tests := []struct {
+		name     string
+		dateTime string
+		want     string
+		wantErr  bool
+	}{
+		{
+			name:     "success",
+			dateTime: "2022-11-13 10:48:33",
+			want:     "2022-11-13T10:48:33Z",
+			wantErr:  false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := strong.FormatDateTime(tt.dateTime)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FormatDateTime() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			fmt.Println("got", got)
+			if got != tt.want {
+				t.Errorf("FormatDateTime() = %v, want %v", got, tt.want)
 			}
 		})
 	}

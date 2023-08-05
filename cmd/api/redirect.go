@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
@@ -47,25 +45,51 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//what format is the strong date?
-	for _, activity := range app.strongConfig.CompletedWorkouts {
-		fmt.Println("STRONG_DATE_TIME", activity.Date)
-	}
+	// for _, activity := range app.strongConfig.CompletedWorkouts {
+	// 	fmt.Println("STRONG_DATE_TIME", activity.Date)
+	// }
 
 	// 4) filter strong completed workouts based off latest strava activity
-	filteredStrongWorkouts := strong.FilterWorkouts(app.strongConfig.CompletedWorkouts, func(workout strong.Workout) bool {
-		startTime, err := time.Parse("2006-01-02 15:04:05", workout.Date)
-		if err != nil {
-			return false
+	// filteredStrongWorkouts := strong.FilterWorkouts(app.strongConfig.CompletedWorkouts, func(workout strong.Workout) bool {
+	// 	startTime, err := time.Parse("2006-01-02 15:04:05", workout.Date)
+	// 	if err != nil {
+	// 		return false
+	// 	}
+
+	// 	result := false
+
+	// 	for _, activity := range stravaActivities {
+	// 		result = !strings.Contains(activity.StartDateLocal, startTime.String())
+	// 	}
+
+	// 	return result
+	// })
+
+	stravaDateTimeMap := make(map[string]struct{})
+	filteredStrongWorkouts := make([]strong.Workout, 0)
+
+	// add strava dateTime to map
+	for _, activity := range stravaActivities {
+		stravaDateTimeMap[activity.StartDateLocal] = struct{}{}
+	}
+
+	//
+	for _, strong := range app.strongConfig.CompletedWorkouts {
+		if _, found := stravaDateTimeMap[strong.Date]; !found {
+			// add to new map
+			filteredStrongWorkouts = append(filteredStrongWorkouts, strong)
 		}
+	}
 
-		result := false
+	// how many filtered strong workouts to post?
 
-		for _, activity := range stravaActivities {
-			result = !strings.Contains(activity.StartDateLocal, startTime.String())
-		}
+	for _, workout := range filteredStrongWorkouts {
+		fmt.Println("filtered strong workouts: ", workout.Date)
+	}
 
-		return result
-	})
+	// for _, activity := range stravaActivities {
+	// 	fmt.Println("strava activities: ", activity.StartDateLocal)
+	// }
 
 	// 5) convert completed workouts to strava activity
 	activities := make([]strava.Actvitiy, 0)
