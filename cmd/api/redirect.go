@@ -44,27 +44,6 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	//what format is the strong date?
-	// for _, activity := range app.strongConfig.CompletedWorkouts {
-	// 	fmt.Println("STRONG_DATE_TIME", activity.Date)
-	// }
-
-	// 4) filter strong completed workouts based off latest strava activity
-	// filteredStrongWorkouts := strong.FilterWorkouts(app.strongConfig.CompletedWorkouts, func(workout strong.Workout) bool {
-	// 	startTime, err := time.Parse("2006-01-02 15:04:05", workout.Date)
-	// 	if err != nil {
-	// 		return false
-	// 	}
-
-	// 	result := false
-
-	// 	for _, activity := range stravaActivities {
-	// 		result = !strings.Contains(activity.StartDateLocal, startTime.String())
-	// 	}
-
-	// 	return result
-	// })
-
 	stravaDateTimeMap := make(map[string]struct{})
 	filteredStrongWorkouts := make([]strong.Workout, 0)
 
@@ -81,22 +60,11 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	// how many filtered strong workouts to post?
-
-	for _, workout := range filteredStrongWorkouts {
-		fmt.Println("filtered strong workouts: ", workout.Date)
-	}
-
-	// for _, activity := range stravaActivities {
-	// 	fmt.Println("strava activities: ", activity.StartDateLocal)
-	// }
-
 	// 5) convert completed workouts to strava activity
 	activities := make([]strava.Actvitiy, 0)
 
 	for _, workout := range filteredStrongWorkouts {
 		activity, err := app.stravaClient.MapStrongWorkout(workout)
-
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -111,12 +79,12 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 6) post to strava api/activity
-	// for _, activity := range activities {
-	// 	err := app.stravaClient.PostActivity(r.Context(), token, activity)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	}
-	// }
+	for _, activity := range activities {
+		err := app.stravaClient.PostActivity(r.Context(), token, activity)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
 
 	// 7) optionally shutdown server on successful posts to strava api
 

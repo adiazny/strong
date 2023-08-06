@@ -2,7 +2,6 @@ package strong_test
 
 import (
 	"bytes"
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -52,7 +51,7 @@ func TestConvertRecords(t *testing.T) {
 			},
 			want: []strong.Workout{{
 				Name:     "JCDFIT Beginner A",
-				Date:     "2022-11-14 07:15:24",
+				Date:     "2022-11-14T07:15:24Z",
 				Duration: 1800000000000,
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
@@ -75,7 +74,7 @@ func TestConvertRecords(t *testing.T) {
 			},
 			want: []strong.Workout{{
 				Name:     "JCDFIT Beginner A",
-				Date:     "2022-11-14 07:15:24",
+				Date:     "2022-11-14T07:15:24Z",
 				Duration: 3600000000000,
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
@@ -98,7 +97,7 @@ func TestConvertRecords(t *testing.T) {
 			},
 			want: []strong.Workout{{
 				Name:     "JCDFIT Beginner A",
-				Date:     "2022-11-14 07:15:24",
+				Date:     "2022-11-14T07:15:24Z",
 				Duration: 5400000000000,
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
@@ -121,7 +120,7 @@ func TestConvertRecords(t *testing.T) {
 			},
 			want: []strong.Workout{{
 				Name:     "JCDFIT Beginner A",
-				Date:     "2022-11-14 07:15:24",
+				Date:     "2022-11-14T07:15:24Z",
 				Duration: 0,
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
@@ -696,7 +695,6 @@ func TestFormatDateTime(t *testing.T) {
 				return
 			}
 
-			fmt.Println("got", got)
 			if got != tt.want {
 				t.Errorf("FormatDateTime() = %v, want %v", got, tt.want)
 			}
