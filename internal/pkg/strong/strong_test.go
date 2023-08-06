@@ -51,7 +51,7 @@ func TestConvertRecords(t *testing.T) {
 			},
 			want: []strong.Workout{{
 				Name:     "JCDFIT Beginner A",
-				Date:     "2022-11-14 07:15:24",
+				Date:     "2022-11-14T07:15:24Z",
 				Duration: 1800000000000,
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
@@ -74,7 +74,7 @@ func TestConvertRecords(t *testing.T) {
 			},
 			want: []strong.Workout{{
 				Name:     "JCDFIT Beginner A",
-				Date:     "2022-11-14 07:15:24",
+				Date:     "2022-11-14T07:15:24Z",
 				Duration: 3600000000000,
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
@@ -97,7 +97,7 @@ func TestConvertRecords(t *testing.T) {
 			},
 			want: []strong.Workout{{
 				Name:     "JCDFIT Beginner A",
-				Date:     "2022-11-14 07:15:24",
+				Date:     "2022-11-14T07:15:24Z",
 				Duration: 5400000000000,
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
@@ -120,7 +120,7 @@ func TestConvertRecords(t *testing.T) {
 			},
 			want: []strong.Workout{{
 				Name:     "JCDFIT Beginner A",
-				Date:     "2022-11-14 07:15:24",
+				Date:     "2022-11-14T07:15:24Z",
 				Duration: 0,
 				Exercises: []strong.Exercise{{
 					Name: "Squat (Barbell)",
@@ -667,6 +667,36 @@ Set 3: 300.0# x 3
 			}
 			if got := workout.Description(); got != tt.want {
 				t.Errorf("Workout.Description() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFormatDateTime(t *testing.T) {
+
+	tests := []struct {
+		name     string
+		dateTime string
+		want     string
+		wantErr  bool
+	}{
+		{
+			name:     "success",
+			dateTime: "2022-11-13 10:48:33",
+			want:     "2022-11-13T10:48:33Z",
+			wantErr:  false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := strong.FormatDateTime(tt.dateTime)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FormatDateTime() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if got != tt.want {
+				t.Errorf("FormatDateTime() = %v, want %v", got, tt.want)
 			}
 		})
 	}

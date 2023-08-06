@@ -77,6 +77,11 @@ func ConvertRecords(records [][]string) ([]Workout, error) {
 			continue
 		}
 
+		dateTime, err := FormatDateTime(record[0])
+		if err != nil {
+			return nil, err
+		}
+
 		workoutDuration, err := parseWorkoutDuration(record[2])
 		if err != nil {
 			return nil, err
@@ -114,7 +119,7 @@ func ConvertRecords(records [][]string) ([]Workout, error) {
 
 		workout := Workout{
 			Name:     record[1],
-			Date:     record[0],
+			Date:     dateTime,
 			Duration: workoutDuration,
 			Exercises: []Exercise{{
 				Name: record[3],
@@ -264,4 +269,13 @@ func parseFloat(input string) (float64, error) {
 	}
 
 	return float, nil
+}
+
+func FormatDateTime(dateTime string) (string, error) {
+	t, err := time.Parse("2006-01-02 15:04:05", dateTime)
+	if err != nil {
+		return "", err
+	}
+
+	return t.Format("2006-01-02T15:04:05Z"), nil
 }

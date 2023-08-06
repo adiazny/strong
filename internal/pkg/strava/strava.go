@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/adiazny/strong/internal/pkg/strong"
 	"golang.org/x/oauth2"
@@ -38,22 +37,17 @@ type Actvitiy struct {
 }
 
 func (client *Client) MapStrongWorkout(workout strong.Workout) (Actvitiy, error) {
-	startTime, err := time.Parse("2006-01-02 15:04:05", workout.Date)
-	if err != nil {
-		return Actvitiy{}, fmt.Errorf("error parsing time %w", err)
-	}
-
 	return Actvitiy{
 		Name:           workout.Name,
 		SportType:      weightTraining,
-		StartDateLocal: startTime.Format("2006-01-02T15:04:05Z"),
+		StartDateLocal: workout.Date,
 		ElapsedTime:    int(workout.Duration.Seconds()),
 		Description:    workout.Description(),
 	}, nil
 }
 
 func (client *Client) GetActivities(ctx context.Context, token *oauth2.Token) ([]Actvitiy, error) {
-	resp, err := client.Client(ctx, token).Get(fmt.Sprintf("%s/%s/%s", stravaBaseURL, athletePath, activitiesPath))
+	resp, err := client.Client(ctx, token).Get(fmt.Sprintf("%s/%s/%s?per_page=100", stravaBaseURL, athletePath, activitiesPath))
 	if err != nil {
 		return nil, fmt.Errorf("error performing http get request: %w", err)
 	}

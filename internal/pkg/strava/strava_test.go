@@ -14,7 +14,7 @@ import (
 func TestMapStrongWorkout(t *testing.T) {
 	workout := strong.Workout{
 		Name:     "Day A",
-		Date:     "2022-11-14 07:15:24",
+		Date:     "2022-11-14T07:15:24Z",
 		Duration: 1800000000000,
 		Exercises: []strong.Exercise{
 			{
