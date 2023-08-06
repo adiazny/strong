@@ -1,5 +1,5 @@
 # strong
-strong app workout logs published to strava
+[strong app](https://www.strong.app/) workout logs published to [strava](https://www.strava.com/)
 
 ![diagram](strong-diagram.jpg)
 
