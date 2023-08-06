@@ -3,13 +3,19 @@ strong app workout logs published to strava
 
 ![diagram](strong-diagram.jpg)
 
-# Program Behavior Goals
-- Get the strong app csv workout log file from Google Drive API
+
+# Phase 1 - Program Behavior Goals
+- Read the strong app csv workout log file locally
+- Parse and convert workouts to Go workout structs
+- Only send strong workouts to Strava API if they do not exist
+
+# Phase 2 - Program Behavior Goals
+- On a timer, pull the strong app csv workout log file from Google Drive API
 - Read the strong.csv workout log file
 - Parse and convert workouts to Go workout structs
-- Send workouts to Strava API
+- Only send strong workouts to Strava API if they do not exist
 
-# Project Structure
+# Project Structure (DRAFT - WIP)
 - `bin`: contains compiled application binaries, ready for deployment to a production server
 - `cmd/api`: contains application-specific code for the Strong API application. Includes the code for running the server, reading and writing HTTP requests and managing authentication.
 - `internal`: contains various ancillary packages used by the Strong API. It will contain the code for interacting with external services, doing data validation and so on. Basically, any code which isn’t application-specific and can potentially be reused will live in here. The Go code under cmd/api will import the packages in the internal directory (but never the other way around).
