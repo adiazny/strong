@@ -1,47 +1,47 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
+	"golang.org/x/oauth2"
 )
 
 // redirectHandler will handle posting Strong completed workouts to Strava activities api
 // if no errors then shutdown server
 
-func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) {
-	// validate request:
+func parseRequest(req *http.Request) (string, error) {
 	// 1) parse valid return oauth code
-	urlValues := r.URL.Query()
+	urlValues := req.URL.Query()
 
 	values, ok := urlValues["code"]
 	if !ok {
 		// handle query param code not in request
-		http.Error(w, "", http.StatusInternalServerError)
+		return "", errors.New("something went wrong")
 	}
 
 	if len(values) > 1 {
 		// handle values having more than one value
-		http.Error(w, "", http.StatusInternalServerError)
+		return "", errors.New("something went wrong")
 	}
 
 	if values[0] == "" {
 		// handle value being a empty string
-		http.Error(w, "", http.StatusInternalServerError)
+		return "", errors.New("something went wrong")
 	}
 
-	// 2) exchange for oauth.Token
-	token, err := app.config.oauthConfig.Exchange(r.Context(), values[0])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	return values[0], nil
+}
 
+func (app *application) uploadNewWorkouts(ctx context.Context, token *oauth2.Token) error {
 	// 3) Get latest strava athlete activity
-	stravaActivities, err := app.stravaClient.GetActivities(r.Context(), token)
+	stravaActivities, err := app.stravaClient.GetActivities(ctx, token)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return err
 	}
 
 	stravaDateTimeMap := make(map[string]struct{})
@@ -66,27 +66,44 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 	for _, workout := range filteredStrongWorkouts {
 		activity, err := app.stravaClient.MapStrongWorkout(workout)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
 		}
 
 		activities = append(activities, activity)
 	}
 
 	if len(activities) == 0 {
-		fmt.Fprint(w, "No workout to post to strava")
-
-		return
+		return errors.New("no workout to post")
 	}
 
 	// 6) post to strava api/activity
 	for _, activity := range activities {
-		err := app.stravaClient.PostActivity(r.Context(), token, activity)
+		err := app.stravaClient.PostActivity(ctx, token, activity)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
 		}
 	}
 
-	// 7) optionally shutdown server on successful posts to strava api
+	return nil
+}
+
+func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) {
+	// validate request:
+	code, err := parseRequest(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	// 2) exchange for oauth.Token
+	token, err := app.config.oauthConfig.Exchange(r.Context(), code)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	err = app.uploadNewWorkouts(r.Context(), token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+	}
 
 	fmt.Fprint(w, "redirect successful")
 }
