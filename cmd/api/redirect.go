@@ -8,34 +8,9 @@ import (
 
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
+	"github.com/adiazny/strong/internal/pkg/web"
 	"golang.org/x/oauth2"
 )
-
-// redirectHandler will handle posting Strong completed workouts to Strava activities api
-// if no errors then shutdown server
-
-func parseRequest(req *http.Request) (string, error) {
-	// 1) parse valid return oauth code
-	urlValues := req.URL.Query()
-
-	values, ok := urlValues["code"]
-	if !ok {
-		// handle query param code not in request
-		return "", errors.New("something went wrong")
-	}
-
-	if len(values) > 1 {
-		// handle values having more than one value
-		return "", errors.New("something went wrong")
-	}
-
-	if values[0] == "" {
-		// handle value being a empty string
-		return "", errors.New("something went wrong")
-	}
-
-	return values[0], nil
-}
 
 func (app *application) uploadNewWorkouts(ctx context.Context, token *oauth2.Token) error {
 	// 3) Get latest strava athlete activity
@@ -88,13 +63,11 @@ func (app *application) uploadNewWorkouts(ctx context.Context, token *oauth2.Tok
 }
 
 func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) {
-	// validate request:
-	code, err := parseRequest(r)
+	code, err := web.ParseRequest(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	// 2) exchange for oauth.Token
 	token, err := app.config.oauthConfig.Exchange(r.Context(), code)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
