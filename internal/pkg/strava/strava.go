@@ -36,18 +36,8 @@ type Actvitiy struct {
 	Commute        bool    `json:"commute"`
 }
 
-func (client *Client) MapStrongWorkout(workout strong.Workout) (Actvitiy, error) {
-	return Actvitiy{
-		Name:           workout.Name,
-		SportType:      weightTraining,
-		StartDateLocal: workout.Date,
-		ElapsedTime:    int(workout.Duration.Seconds()),
-		Description:    workout.Description(),
-	}, nil
-}
-
 func (client *Client) GetActivities(ctx context.Context, token *oauth2.Token) ([]Actvitiy, error) {
-	resp, err := client.Client(ctx, token).Get(fmt.Sprintf("%s/%s/%s?per_page=100", stravaBaseURL, athletePath, activitiesPath))
+	resp, err := client.Client(ctx, token).Get(fmt.Sprintf("%s/%s/%s?per_page=200", stravaBaseURL, athletePath, activitiesPath))
 	if err != nil {
 		return nil, fmt.Errorf("error performing http get request: %w", err)
 	}
@@ -102,4 +92,14 @@ func (client *Client) PostActivity(ctx context.Context, token *oauth2.Token, act
 	}
 
 	return nil
+}
+
+func MapStrongWorkout(workout strong.Workout) Actvitiy {
+	return Actvitiy{
+		Name:           workout.Name,
+		SportType:      weightTraining,
+		StartDateLocal: workout.Date,
+		ElapsedTime:    int(workout.Duration.Seconds()),
+		Description:    workout.Description(),
+	}
 }

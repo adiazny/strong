@@ -43,3 +43,15 @@ easy-working-with-csv-in-golang-using-gocsv-package-9c8424728bbe
                 - https://articles.wesionary.team/read-and-write-csv-file-in-go-b445e34968e9
                 - https://articles.wesionary.team/
         - https://github.com/jszwec/csvutil
+
+## Strava Activty
+```
+{Name:🔄6-23 Wk3: 53(1) B Day SportType:WeightTraining StartDateLocal:2023-09-20T18:02:21Z ElapsedTime:4020 Description: Distance:0 Trainer:false Commute:false}
+```
+
+```
+Strong Workout {Name:TEST WORKOUT Date:2023-09-20T19:32:45Z Duration:58m0s Exercises:[{Name:Exercise A Sets:[{ID:1 Weight:140 Reps:3 Distance:0 Duration:0s Notes: WorkoutNotes: RPE:0}]} {Name:Exercise A Sets:[{ID:2 Weight:140 Reps:3 Distance:0 Duration:0s Notes: WorkoutNotes: RPE:0}]}]}
+```
+
+Stra:2023-09-20T18:02:21Z 
+Stro:2023-09-20T19:32:45Z

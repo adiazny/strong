@@ -57,14 +57,7 @@ Set 3: 95.0# x 3
 `,
 	}
 
-	stravaClient := strava.Client{
-		Config: &oauth2.Config{},
-	}
-
-	got, err := stravaClient.MapStrongWorkout(workout)
-	if err != nil {
-		t.Errorf("MapStrongWorkout() error = %v", err)
-	}
+	got := strava.MapStrongWorkout(workout)
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("MapStrongWorkout() = %v, want %v", got, want)
