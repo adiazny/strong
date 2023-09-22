@@ -12,61 +12,55 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func (app *application) filterNewWorkouts(activities []strava.Actvitiy) []strong.Workout {
+func filterNewWorkouts(activities []strava.Actvitiy, workouts []strong.Workout) []strong.Workout {
 	stravaDateTimeMap := make(map[string]struct{})
-	filteredStrongWorkouts := make([]strong.Workout, 0)
+	newStrongWorkouts := make([]strong.Workout, 0)
 
-	// add strava dateTime to map
 	for _, activity := range activities {
 		stravaDateTimeMap[activity.StartDateLocal] = struct{}{}
 	}
 
-	for _, strong := range app.strongConfig.CompletedWorkouts {
+	for _, strong := range workouts {
 		if _, found := stravaDateTimeMap[strong.Date]; !found {
-			// add to new map
-			filteredStrongWorkouts = append(filteredStrongWorkouts, strong)
+			newStrongWorkouts = append(newStrongWorkouts, strong)
 		}
 	}
 
-	return filteredStrongWorkouts
+	return newStrongWorkouts
+}
+
+func convertToStrava(workouts []strong.Workout) []strava.Actvitiy {
+	newActivities := make([]strava.Actvitiy, 0)
+
+	for _, workout := range workouts {
+		activity := strava.MapStrongWorkout(workout)
+
+		newActivities = append(newActivities, activity)
+	}
+
+	return newActivities
 }
 
 func (app *application) uploadNewWorkouts(ctx context.Context, token *oauth2.Token) error {
-	// 3) Get latest strava athlete activity
 	stravaActivities, err := app.stravaClient.GetActivities(ctx, token)
 	if err != nil {
 		return err
 	}
 
-	newStrongWorkouts := app.filterNewWorkouts(stravaActivities)
+	newStrongWorkouts := filterNewWorkouts(stravaActivities, app.strongConfig.CompletedWorkouts)
 
-	fmt.Printf("Strava Activity %+v \n", stravaActivities[0])
+	newActivities := convertToStrava(newStrongWorkouts)
 
-	fmt.Printf("Strong Workout %+v \n", app.strongConfig.CompletedWorkouts[0])
+	if len(newActivities) == 0 {
+		return errors.New("no activities to post")
+	}
 
-	// 5) convert completed workouts to strava activity
-	activities := make([]strava.Actvitiy, 0)
-
-	for _, workout := range newStrongWorkouts {
-		activity, err := app.stravaClient.MapStrongWorkout(workout)
+	for _, activity := range newActivities {
+		err := app.stravaClient.PostActivity(ctx, token, activity)
 		if err != nil {
 			return err
 		}
-
-		activities = append(activities, activity)
 	}
-
-	if len(activities) == 0 {
-		return errors.New("no workout to post")
-	}
-
-	// 6) post to strava api/activity
-	// for _, activity := range activities {
-	// 	err := app.stravaClient.PostActivity(ctx, token, activity)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	return nil
 }
