@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
@@ -41,6 +43,21 @@ func convertToStrava(workouts []strong.Workout) []strava.Actvitiy {
 	return newActivities
 }
 
+func saveToken(path string, token *oauth2.Token) error {
+	fmt.Printf("Saving credential file to: %s\n", path)
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+
+	if err != nil {
+		return fmt.Errorf("unable to save oauth tokens: %v", err)
+	}
+
+	defer f.Close()
+	
+	json.NewEncoder(f).Encode(token)
+
+	return nil
+}
+
 func (app *application) uploadNewWorkouts(ctx context.Context, token *oauth2.Token) error {
 	stravaActivities, err := app.stravaClient.GetActivities(ctx, token)
 	if err != nil {
@@ -72,6 +89,13 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	token, err := app.config.oauthConfig.Exchange(r.Context(), code)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	tokFile := "token.json"
+
+	err = saveToken(tokFile,token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

@@ -31,3 +31,6 @@ config/.env
 # csv files
 examples/*.csv
 *.csv
+
+# 
+*.json

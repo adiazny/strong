@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -47,6 +49,21 @@ type application struct {
 
 */
 
+func tokenFromFile(file string) (*oauth2.Token, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+
+	defer f.Close()
+
+	tok := &oauth2.Token{}
+
+	err = json.NewDecoder(f).Decode(tok)
+
+	return tok, err
+}
+
 func main() {
 	log := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
@@ -66,6 +83,16 @@ func main() {
 	flag.StringVar(&cfg.oauthConfig.ClientID, "client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
 	flag.StringVar(&cfg.oauthConfig.ClientSecret, "secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
 	flag.Parse()
+
+	if cfg.oauthConfig.ClientID == "" {
+		log.Print("strava client id is required")
+		os.Exit(1)
+	}
+
+	if cfg.oauthConfig.ClientSecret == "" {
+		log.Print("strava client secret is required")
+		os.Exit(1)
+	}
 
 	file, err := os.Open("./strong.csv")
 	if err != nil {
@@ -115,12 +142,24 @@ func main() {
 		serverErrors <- srv.ListenAndServe()
 	}()
 
-	url := cfg.oauthConfig.AuthCodeURL("state")
-	log.Println(url)
+	// check if token.json file exists
+	tokFile := "token.json"
 
-	// Blocking main.
-	if err := <-serverErrors; err != nil {
-		log.Fatalf("error with http server %v", err)
+	token, err := tokenFromFile(tokFile)
+	if err != nil {
+		url := cfg.oauthConfig.AuthCodeURL("state")
+		log.Println(url)
+
+		// Blocking main.
+		if err := <-serverErrors; err != nil {
+			log.Fatalf("error with http server %v", err)
+		}
+
+		os.Exit(1)
 	}
 
+	err = app.uploadNewWorkouts(context.Background(), token)
+	if err != nil {
+		log.Fatalf("error uploading strava activities %v", err)
+	}
 }
