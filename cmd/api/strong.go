@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/adiazny/strong/internal/pkg/strava"
@@ -16,11 +19,12 @@ import (
 const version = "1.1.0"
 
 const (
-	redirectURL        = "http://localhost:4001/v1/redirect"
+	defaultAPIPort     = 5000
+	defaultEnv         = "development"
+	defaultRedirectURL = "http://localhost:4001/v1/redirect"
 	stravaAuthorizeURL = "https://www.strava.com/oauth/authorize"
 	stravaTokenURL     = "https://www.strava.com/oauth/token"
-	stravaWriteScope   = "activity:write,activity:read"
-	stravaReadScope    = "activity:read"
+	stravaScopes       = "activity:write,activity:read"
 )
 
 type config struct {
@@ -32,7 +36,7 @@ type config struct {
 type application struct {
 	config       config
 	log          *log.Logger
-	stravaClient *strava.Client
+	stravaClient *strava.Provider
 	strongConfig *strong.Config
 }
 
@@ -47,6 +51,21 @@ type application struct {
 
 */
 
+func tokenFromFile(file string) (*oauth2.Token, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+
+	defer f.Close()
+
+	tok := &oauth2.Token{}
+
+	err = json.NewDecoder(f).Decode(tok)
+
+	return tok, err
+}
+
 func main() {
 	log := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
@@ -57,15 +76,28 @@ func main() {
 			AuthURL:  stravaAuthorizeURL,
 			TokenURL: stravaTokenURL,
 		},
-		RedirectURL: redirectURL,
-		Scopes:      []string{stravaWriteScope},
+		Scopes: []string{stravaScopes},
 	}
 
-	flag.IntVar(&cfg.port, "port", 5000, "API server port")
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	flag.IntVar(&cfg.port, "port", defaultAPIPort, "API server port")
+	flag.StringVar(&cfg.env, "env", defaultEnv, "Environment (development|staging|production)")
 	flag.StringVar(&cfg.oauthConfig.ClientID, "client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
 	flag.StringVar(&cfg.oauthConfig.ClientSecret, "secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
+	flag.StringVar(&cfg.oauthConfig.RedirectURL, "redirect", defaultRedirectURL, "Strava Redirect URL")
 	flag.Parse()
+
+	if cfg.oauthConfig.ClientID == "" {
+		log.Print("strava client id is required")
+		os.Exit(1)
+	}
+
+	if cfg.oauthConfig.ClientSecret == "" {
+		log.Print("strava client secret is required")
+		os.Exit(1)
+	}
+
+	//========================================================================
+	// Strong processing
 
 	file, err := os.Open("./strong.csv")
 	if err != nil {
@@ -91,8 +123,12 @@ func main() {
 
 	strongConfg := &strong.Config{CompletedWorkouts: completeWorkouts}
 
-	stravaClient := &strava.Client{Logger: log, Config: cfg.oauthConfig}
+	//========================================================================
+	// Strava bootstrap
+	stravaClient := &strava.Provider{Logger: log, Config: cfg.oauthConfig}
 
+	//========================================================================
+	// API Server Setup
 	app := &application{
 		config:       cfg,
 		log:          log,
@@ -110,17 +146,36 @@ func main() {
 
 	serverErrors := make(chan error, 1)
 
-	go func() {
-		log.Printf("starting %s server on %s", cfg.env, srv.Addr)
-		serverErrors <- srv.ListenAndServe()
-	}()
-
-	url := cfg.oauthConfig.AuthCodeURL("state")
-	log.Println(url)
-
-	// Blocking main.
-	if err := <-serverErrors; err != nil {
-		log.Fatalf("error with http server %v", err)
+	//========================================================================
+	// OAuth Checks
+	path, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error looking up user config directory %v", err)
 	}
 
+	filename := filepath.Join(path, "strong", "tokens.json")
+
+	token, err := tokenFromFile(filename)
+	if err != nil {
+		// Start api server if token file not found or errored during opening file
+		go func() {
+			log.Printf("starting %s api server on %s", cfg.env, srv.Addr)
+			serverErrors <- srv.ListenAndServe()
+		}()
+
+		url := cfg.oauthConfig.AuthCodeURL("state")
+		log.Println(url)
+
+		// Blocking main.
+		if err := <-serverErrors; err != nil {
+			log.Fatalf("error with http server %v", err)
+		}
+	}
+
+	// Upload strava activites if valid token file found
+	log.Print("uploading new workouts to strava")
+	err = app.uploadNewWorkouts(context.Background(), token)
+	if err != nil {
+		log.Fatalf("error uploading strava activities %v", err)
+	}
 }

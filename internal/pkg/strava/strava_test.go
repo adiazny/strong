@@ -64,7 +64,7 @@ Set 3: 95.0# x 3
 	}
 }
 
-func TestClient_PostActivity(t *testing.T) {
+func TestProvider_PostActivity(t *testing.T) {
 	type fields struct {
 		Logger *log.Logger
 		Config *oauth2.Config
@@ -84,18 +84,18 @@ func TestClient_PostActivity(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := &strava.Client{
+			provider := &strava.Provider{
 				Logger: tt.fields.Logger,
 				Config: tt.fields.Config,
 			}
-			if err := client.PostActivity(tt.args.ctx, tt.args.token, tt.args.activity); (err != nil) != tt.wantErr {
-				t.Errorf("Client.PostActivity() error = %v, wantErr %v", err, tt.wantErr)
+			if err := provider.PostActivity(tt.args.ctx, tt.args.token, tt.args.activity); (err != nil) != tt.wantErr {
+				t.Errorf("Provider.PostActivity() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-func TestClient_GetActivities(t *testing.T) {
+func TestProvider_GetActivities(t *testing.T) {
 	type fields struct {
 		Logger *log.Logger
 		Config *oauth2.Config
@@ -115,17 +115,17 @@ func TestClient_GetActivities(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := &strava.Client{
+			provider := &strava.Provider{
 				Logger: tt.fields.Logger,
 				Config: tt.fields.Config,
 			}
-			got, err := client.GetActivities(tt.args.ctx, tt.args.token)
+			got, err := provider.GetActivities(tt.args.ctx, tt.args.token)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.GetActivities() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Provider.GetActivities() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.GetActivities() = %v, want %v", got, tt.want)
+				t.Errorf("Provider.GetActivities() = %v, want %v", got, tt.want)
 			}
 		})
 	}

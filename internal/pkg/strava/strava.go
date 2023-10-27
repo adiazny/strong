@@ -20,7 +20,7 @@ const (
 	weightTraining = "WeightTraining"
 )
 
-type Client struct {
+type Provider struct {
 	*log.Logger
 	*oauth2.Config
 }
@@ -36,8 +36,8 @@ type Actvitiy struct {
 	Commute        bool    `json:"commute"`
 }
 
-func (client *Client) GetActivities(ctx context.Context, token *oauth2.Token) ([]Actvitiy, error) {
-	resp, err := client.Client(ctx, token).Get(fmt.Sprintf("%s/%s/%s?per_page=200", stravaBaseURL, athletePath, activitiesPath))
+func (provider *Provider) GetActivities(ctx context.Context, token *oauth2.Token) ([]Actvitiy, error) {
+	resp, err := provider.Client(ctx, token).Get(fmt.Sprintf("%s/%s/%s?per_page=200", stravaBaseURL, athletePath, activitiesPath))
 	if err != nil {
 		return nil, fmt.Errorf("error performing http get request: %w", err)
 	}
@@ -52,7 +52,7 @@ func (client *Client) GetActivities(ctx context.Context, token *oauth2.Token) ([
 			return nil, fmt.Errorf("error reading response body %w", err)
 		}
 
-		client.Logger.Printf("%s\n", respBody)
+		provider.Logger.Printf("%s\n", respBody)
 
 		return nil, fmt.Errorf("error response status code is %d", resp.StatusCode)
 	}
@@ -72,7 +72,7 @@ func (client *Client) GetActivities(ctx context.Context, token *oauth2.Token) ([
 	return activities, nil
 }
 
-func (client *Client) PostActivity(ctx context.Context, token *oauth2.Token, activity Actvitiy) error {
+func (provider *Provider) PostActivity(ctx context.Context, token *oauth2.Token, activity Actvitiy) error {
 	activityData, err := json.Marshal(activity)
 	if err != nil {
 		return fmt.Errorf("error marshling activity: %w", err)
@@ -80,7 +80,7 @@ func (client *Client) PostActivity(ctx context.Context, token *oauth2.Token, act
 
 	bodyReader := bytes.NewReader(activityData)
 
-	resp, err := client.Client(ctx, token).Post(fmt.Sprintf("%s/%s", stravaBaseURL, activitiesPath), "application/json", bodyReader)
+	resp, err := provider.Client(ctx, token).Post(fmt.Sprintf("%s/%s", stravaBaseURL, activitiesPath), "application/json", bodyReader)
 	if err != nil {
 		return fmt.Errorf("error performing http post request: %w", err)
 	}
