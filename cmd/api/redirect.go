@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
@@ -45,6 +46,11 @@ func convertToStrava(workouts []strong.Workout) []strava.Actvitiy {
 
 func saveToken(path string, token *oauth2.Token) error {
 	fmt.Printf("Saving credential file to: %s\n", path)
+	err := os.MkdirAll(filepath.Dir(path), 0700)
+	if err != nil {
+		return fmt.Errorf("unable to create directory: %v", err)
+	}
+
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 
 	if err != nil {
@@ -52,7 +58,7 @@ func saveToken(path string, token *oauth2.Token) error {
 	}
 
 	defer f.Close()
-	
+
 	json.NewEncoder(f).Encode(token)
 
 	return nil
@@ -93,9 +99,14 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	tokFile := "token.json"
+	path, err := os.UserHomeDir()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 
-	err = saveToken(tokFile,token)
+	filename := filepath.Join(path, "strong", "tokens.json")
+
+	err = saveToken(filename, token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

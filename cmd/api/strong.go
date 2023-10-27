@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/adiazny/strong/internal/pkg/strava"
@@ -142,10 +143,14 @@ func main() {
 		serverErrors <- srv.ListenAndServe()
 	}()
 
-	// check if token.json file exists
-	tokFile := "token.json"
+	path, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error looking up user config directory %v", err)
+	}
 
-	token, err := tokenFromFile(tokFile)
+	filename := filepath.Join(path, "strong", "tokens.json")
+
+	token, err := tokenFromFile(filename)
 	if err != nil {
 		url := cfg.oauthConfig.AuthCodeURL("state")
 		log.Println(url)
