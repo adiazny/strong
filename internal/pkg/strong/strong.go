@@ -1,6 +1,7 @@
 package strong
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -278,4 +279,18 @@ func FormatDateTime(dateTime string) (string, error) {
 	}
 
 	return t.Format("2006-01-02T15:04:05Z"), nil
+}
+
+type FileProvider struct {
+	// logger
+	fileName string
+}
+
+func NewFileProvider(path string) *FileProvider {
+	return &FileProvider{}
+}
+
+func (fi *FileImporter) Import(ctx context.Context) ([]byte, error) {
+
+	return nil, nil
 }
