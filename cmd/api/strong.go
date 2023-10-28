@@ -21,7 +21,7 @@ const version = "1.1.0"
 
 const (
 	defaultAPIPort     = 5000
-	defaultEnv         = "development"
+	defaultPath        = "./strong.csv"
 	defaultRedirectURL = "http://localhost:4001/v1/redirect"
 	stravaAuthorizeURL = "https://www.strava.com/oauth/authorize"
 	stravaTokenURL     = "https://www.strava.com/oauth/token"
@@ -30,7 +30,7 @@ const (
 
 type config struct {
 	port        int
-	env         string
+	path        string
 	oauthConfig *oauth2.Config
 }
 
@@ -63,8 +63,11 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 	tok := &oauth2.Token{}
 
 	err = json.NewDecoder(f).Decode(tok)
+	if err != nil {
+		return nil, err
+	}
 
-	return tok, err
+	return tok, nil
 }
 
 func main() {
@@ -81,7 +84,7 @@ func main() {
 	}
 
 	flag.IntVar(&cfg.port, "port", defaultAPIPort, "API server port")
-	flag.StringVar(&cfg.env, "env", defaultEnv, "Environment (development|staging|production)")
+	flag.StringVar(&cfg.path, "path", defaultPath, "Path to strong file")
 	flag.StringVar(&cfg.oauthConfig.ClientID, "client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
 	flag.StringVar(&cfg.oauthConfig.ClientSecret, "secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
 	flag.StringVar(&cfg.oauthConfig.RedirectURL, "redirect", defaultRedirectURL, "Strava Redirect URL")
@@ -101,7 +104,7 @@ func main() {
 	// Local File Implementation
 
 	fp := &localData.FileProvider{
-		Path: "./strong.csv",
+		Path: cfg.path,
 	}
 
 	file, err := fp.Import(context.Background())
@@ -153,7 +156,7 @@ func main() {
 	if err != nil {
 		// Start api server if token file not found or errored during opening file
 		go func() {
-			log.Printf("starting %s api server on %s", cfg.env, srv.Addr)
+			log.Printf("starting api server on %s", srv.Addr)
 			serverErrors <- srv.ListenAndServe()
 		}()
 
