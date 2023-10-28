@@ -13,6 +13,7 @@ import (
 
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
+	localData "github.com/adiazny/strong/internal/pkg/strong/data"
 	"golang.org/x/oauth2"
 )
 
@@ -37,7 +38,7 @@ type application struct {
 	config       config
 	log          *log.Logger
 	stravaClient *strava.Provider
-	strongConfig *strong.Config
+	workouts     []strong.Workout
 }
 
 // TODO
@@ -97,31 +98,24 @@ func main() {
 	}
 
 	//========================================================================
-	// Strong processing
+	// Local File Implementation
 
-	file, err := os.Open("./strong.csv")
-	if err != nil {
-		log.Printf("error opening file %v\n", err)
-		os.Exit(1)
+	fp := &localData.FileProvider{
+		Path: "./strong.csv",
 	}
 
+	file, err := fp.Import(context.Background())
+	if err != nil {
+		log.Printf("error importing file %v\n", err)
+		os.Exit(1)
+	}
 	defer file.Close()
 
-	records, err := strong.ReadCSV(file)
+	workouts, err := strong.Process(file)
 	if err != nil {
-		log.Printf("error reading csv file %v\n", err)
+		log.Printf("error processing file %v\n", err)
 		os.Exit(1)
 	}
-
-	workouts, err := strong.ConvertRecords(records)
-	if err != nil {
-		log.Printf("error converting csv to records %v\n", err)
-		os.Exit(1)
-	}
-
-	completeWorkouts := strong.CombineWorkouts(workouts)
-
-	strongConfg := &strong.Config{CompletedWorkouts: completeWorkouts}
 
 	//========================================================================
 	// Strava bootstrap
@@ -133,7 +127,7 @@ func main() {
 		config:       cfg,
 		log:          log,
 		stravaClient: stravaClient,
-		strongConfig: strongConfg,
+		workouts:     workouts,
 	}
 
 	srv := &http.Server{

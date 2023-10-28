@@ -20,7 +20,7 @@ func TestReadCSV(t *testing.T) {
 	buf := bytes.NewBuffer(csvAsBytes)
 
 	// output = slice of raw records of one or more fields per record
-	got, err := strong.ReadCSV(buf)
+	got, err := strong.ParseRecords(buf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +151,7 @@ func TestConvertRecords(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := strong.ConvertRecords(tt.args.records)
+			got, err := strong.ExtractWorkouts(tt.args.records)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ConvertRecords() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -499,7 +499,7 @@ func TestCombineWorkouts(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := strong.CombineWorkouts(tt.args.workouts)
+			got := strong.AssembleWorkouts(tt.args.workouts)
 
 			assert.ElementsMatch(t, tt.want, got)
 		})

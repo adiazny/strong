@@ -1,8 +1,10 @@
 package data
 
-import "context"
+import (
+	"context"
+	"os"
+)
 
 type Importer interface {
-	Import(ctx context.Context) ([]byte, error)
+	Import(ctx context.Context) (*os.File, error)
 }
-

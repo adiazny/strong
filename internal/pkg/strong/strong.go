@@ -1,10 +1,10 @@
 package strong
 
 import (
-	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -59,18 +59,18 @@ type Set struct {
 	RPE          float64
 }
 
-func ReadCSV(input io.Reader) ([][]string, error) {
+func ParseRecords(input io.Reader) ([][]string, error) {
 	csvReader := csv.NewReader(input)
 
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("error reading csv file %w", err)
+		return nil, fmt.Errorf("error parsing csv file %w", err)
 	}
 
 	return records, nil
 }
 
-func ConvertRecords(records [][]string) ([]Workout, error) {
+func ExtractWorkouts(records [][]string) ([]Workout, error) {
 	var workouts []Workout
 
 	for i, record := range records {
@@ -143,7 +143,7 @@ func ConvertRecords(records [][]string) ([]Workout, error) {
 	return workouts, nil
 }
 
-func CombineWorkouts(workouts []Workout) []Workout {
+func AssembleWorkouts(workouts []Workout) []Workout {
 	if workouts == nil {
 		return nil
 	}
@@ -281,16 +281,16 @@ func FormatDateTime(dateTime string) (string, error) {
 	return t.Format("2006-01-02T15:04:05Z"), nil
 }
 
-type FileProvider struct {
-	// logger
-	fileName string
-}
+func Process(file *os.File) ([]Workout, error) {
+	records, err := ParseRecords(file)
+	if err != nil {
+		return nil, fmt.Errorf("error reading csv file %w", err)
+	}
 
-func NewFileProvider(path string) *FileProvider {
-	return &FileProvider{}
-}
+	rawWorkouts, err := ExtractWorkouts(records)
+	if err != nil {
+		return nil, fmt.Errorf("error converting csv to records %w", err)
+	}
 
-func (fi *FileImporter) Import(ctx context.Context) ([]byte, error) {
-
-	return nil, nil
+	return AssembleWorkouts(rawWorkouts), nil
 }
