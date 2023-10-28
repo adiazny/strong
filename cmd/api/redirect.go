@@ -94,7 +94,7 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	token, err := app.config.oauthConfig.Exchange(r.Context(), code)
+	token, err := app.config.stravaOAuth.Exchange(r.Context(), code)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

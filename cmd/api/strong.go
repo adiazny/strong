@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
@@ -11,10 +12,13 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/adiazny/strong/internal/pkg/gdrive"
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
 	localData "github.com/adiazny/strong/internal/pkg/strong/data"
 	"golang.org/x/oauth2"
+	"google.golang.org/api/drive/v2"
+	"google.golang.org/api/driveactivity/v2"
 )
 
 const version = "1.1.0"
@@ -31,7 +35,8 @@ const (
 type config struct {
 	port        int
 	path        string
-	oauthConfig *oauth2.Config
+	stravaOAuth *oauth2.Config
+	gdriveOAuth *oauth2.Config
 }
 
 type application struct {
@@ -75,7 +80,7 @@ func main() {
 
 	var cfg config
 
-	cfg.oauthConfig = &oauth2.Config{
+	cfg.stravaOAuth = &oauth2.Config{
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  stravaAuthorizeURL,
 			TokenURL: stravaTokenURL,
@@ -83,21 +88,52 @@ func main() {
 		Scopes: []string{stravaScopes},
 	}
 
+	cfg.gdriveOAuth = &oauth2.Config{
+		Scopes: []string{
+			drive.DriveReadonlyScope,
+			driveactivity.DriveActivityReadonlyScope,
+		},
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "https://accounts.google.com/o/oauth2/auth",
+			TokenURL: "https://oauth2.googleapis.com/token",
+		},
+		RedirectURL: "http://localhost",
+	}
+
 	flag.IntVar(&cfg.port, "port", defaultAPIPort, "API server port")
 	flag.StringVar(&cfg.path, "path", defaultPath, "Path to strong file")
-	flag.StringVar(&cfg.oauthConfig.ClientID, "client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
-	flag.StringVar(&cfg.oauthConfig.ClientSecret, "secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
-	flag.StringVar(&cfg.oauthConfig.RedirectURL, "redirect", defaultRedirectURL, "Strava Redirect URL")
+	flag.StringVar(&cfg.stravaOAuth.ClientID, "strava-client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
+	flag.StringVar(&cfg.stravaOAuth.ClientSecret, "strava-secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
+	flag.StringVar(&cfg.stravaOAuth.RedirectURL, "redirect", defaultRedirectURL, "Strava Redirect URL")
+	flag.StringVar(&cfg.gdriveOAuth.ClientID, "gdrive-client", os.Getenv("GDRIVE_CLIENT_ID"), "Google Drive API Client ID")
+	flag.StringVar(&cfg.gdriveOAuth.ClientSecret, "gdrive-secret", os.Getenv("GDRIVE_CLIENT_SECRET"), "Google Drive API Client Secret")
 	flag.Parse()
 
-	if cfg.oauthConfig.ClientID == "" {
+	if cfg.stravaOAuth.ClientID == "" {
 		log.Print("strava client id is required")
 		os.Exit(1)
 	}
 
-	if cfg.oauthConfig.ClientSecret == "" {
+	if cfg.stravaOAuth.ClientSecret == "" {
 		log.Print("strava client secret is required")
 		os.Exit(1)
+	}
+
+	if cfg.gdriveOAuth.ClientID == "" {
+		log.Print("gdrive client id is required")
+		os.Exit(1)
+	}
+
+	if cfg.gdriveOAuth.ClientSecret == "" {
+		log.Print("gdrive client secret is required")
+		os.Exit(1)
+	}
+
+	//========================================================================
+	// Download File from Google Drive
+	// TODO: continue here
+	driveFileProvider := &gdrive.FileProvider{
+		Path: cfg.path,
 	}
 
 	//========================================================================
@@ -107,12 +143,13 @@ func main() {
 		Path: cfg.path,
 	}
 
-	file, err := fp.Import(context.Background())
+	fileBytes, err := fp.Import(context.Background())
 	if err != nil {
 		log.Printf("error importing file %v\n", err)
 		os.Exit(1)
 	}
-	defer file.Close()
+
+	file := bytes.NewReader(fileBytes)
 
 	workouts, err := strong.Process(file)
 	if err != nil {
@@ -122,7 +159,7 @@ func main() {
 
 	//========================================================================
 	// Strava bootstrap
-	stravaClient := &strava.Provider{Logger: log, Config: cfg.oauthConfig}
+	stravaClient := &strava.Provider{Logger: log, Config: cfg.stravaOAuth}
 
 	//========================================================================
 	// API Server Setup
@@ -160,7 +197,7 @@ func main() {
 			serverErrors <- srv.ListenAndServe()
 		}()
 
-		url := cfg.oauthConfig.AuthCodeURL("state")
+		url := cfg.stravaOAuth.AuthCodeURL("state")
 		log.Println(url)
 
 		// Blocking main.
