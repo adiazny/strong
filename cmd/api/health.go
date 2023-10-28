@@ -7,13 +7,11 @@ import (
 
 func (app *application) healthHandler(w http.ResponseWriter, r *http.Request) {
 	health := struct {
-		Status      string
-		Environment string
-		Version     string
+		Status  string
+		Version string
 	}{
-		Status:      "available",
-		Environment: app.config.env,
-		Version:     version,
+		Status:  "available",
+		Version: version,
 	}
 
 	data, err := json.Marshal(health)

@@ -70,7 +70,7 @@ func (app *application) uploadNewWorkouts(ctx context.Context, token *oauth2.Tok
 		return err
 	}
 
-	newStrongWorkouts := filterNewWorkouts(stravaActivities, app.strongConfig.CompletedWorkouts)
+	newStrongWorkouts := filterNewWorkouts(stravaActivities, app.workouts)
 
 	newActivities := convertToStrava(newStrongWorkouts)
 

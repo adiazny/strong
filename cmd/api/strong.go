@@ -13,6 +13,7 @@ import (
 
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
+	localData "github.com/adiazny/strong/internal/pkg/strong/data"
 	"golang.org/x/oauth2"
 )
 
@@ -20,7 +21,7 @@ const version = "1.1.0"
 
 const (
 	defaultAPIPort     = 5000
-	defaultEnv         = "development"
+	defaultPath        = "./strong.csv"
 	defaultRedirectURL = "http://localhost:4001/v1/redirect"
 	stravaAuthorizeURL = "https://www.strava.com/oauth/authorize"
 	stravaTokenURL     = "https://www.strava.com/oauth/token"
@@ -29,7 +30,7 @@ const (
 
 type config struct {
 	port        int
-	env         string
+	path        string
 	oauthConfig *oauth2.Config
 }
 
@@ -37,7 +38,7 @@ type application struct {
 	config       config
 	log          *log.Logger
 	stravaClient *strava.Provider
-	strongConfig *strong.Config
+	workouts     []strong.Workout
 }
 
 // TODO
@@ -62,8 +63,11 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 	tok := &oauth2.Token{}
 
 	err = json.NewDecoder(f).Decode(tok)
+	if err != nil {
+		return nil, err
+	}
 
-	return tok, err
+	return tok, nil
 }
 
 func main() {
@@ -80,7 +84,7 @@ func main() {
 	}
 
 	flag.IntVar(&cfg.port, "port", defaultAPIPort, "API server port")
-	flag.StringVar(&cfg.env, "env", defaultEnv, "Environment (development|staging|production)")
+	flag.StringVar(&cfg.path, "path", defaultPath, "Path to strong file")
 	flag.StringVar(&cfg.oauthConfig.ClientID, "client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
 	flag.StringVar(&cfg.oauthConfig.ClientSecret, "secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
 	flag.StringVar(&cfg.oauthConfig.RedirectURL, "redirect", defaultRedirectURL, "Strava Redirect URL")
@@ -97,31 +101,24 @@ func main() {
 	}
 
 	//========================================================================
-	// Strong processing
+	// Local File Implementation
 
-	file, err := os.Open("./strong.csv")
-	if err != nil {
-		log.Printf("error opening file %v\n", err)
-		os.Exit(1)
+	fp := &localData.FileProvider{
+		Path: cfg.path,
 	}
 
+	file, err := fp.Import(context.Background())
+	if err != nil {
+		log.Printf("error importing file %v\n", err)
+		os.Exit(1)
+	}
 	defer file.Close()
 
-	records, err := strong.ReadCSV(file)
+	workouts, err := strong.Process(file)
 	if err != nil {
-		log.Printf("error reading csv file %v\n", err)
+		log.Printf("error processing file %v\n", err)
 		os.Exit(1)
 	}
-
-	workouts, err := strong.ConvertRecords(records)
-	if err != nil {
-		log.Printf("error converting csv to records %v\n", err)
-		os.Exit(1)
-	}
-
-	completeWorkouts := strong.CombineWorkouts(workouts)
-
-	strongConfg := &strong.Config{CompletedWorkouts: completeWorkouts}
 
 	//========================================================================
 	// Strava bootstrap
@@ -133,7 +130,7 @@ func main() {
 		config:       cfg,
 		log:          log,
 		stravaClient: stravaClient,
-		strongConfig: strongConfg,
+		workouts:     workouts,
 	}
 
 	srv := &http.Server{
@@ -159,7 +156,7 @@ func main() {
 	if err != nil {
 		// Start api server if token file not found or errored during opening file
 		go func() {
-			log.Printf("starting %s api server on %s", cfg.env, srv.Addr)
+			log.Printf("starting api server on %s", srv.Addr)
 			serverErrors <- srv.ListenAndServe()
 		}()
 
