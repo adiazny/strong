@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/adiazny/strong/internal/pkg/gdrive"
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
 	localData "github.com/adiazny/strong/internal/pkg/strong/data"
@@ -131,10 +130,14 @@ func main() {
 
 	//========================================================================
 	// Download File from Google Drive
-	// TODO: continue here
-	driveFileProvider := &gdrive.FileProvider{
-		Path: cfg.path,
-	}
+
+	// check if oauth tokens exist
+	// create new drive httpClient
+	// create new driveService
+
+	// driveFileProvider := &gdrive.FileProvider{
+	// 	Path: cfg.path,
+	// }
 
 	//========================================================================
 	// Local File Implementation
