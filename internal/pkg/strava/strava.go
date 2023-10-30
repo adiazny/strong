@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/adiazny/strong/internal/pkg/auth"
 	"github.com/adiazny/strong/internal/pkg/strong"
 	"golang.org/x/oauth2"
 )
@@ -22,7 +23,7 @@ const (
 
 type Provider struct {
 	*log.Logger
-	*oauth2.Config
+	*auth.Provider
 }
 
 type Actvitiy struct {

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -12,12 +11,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/adiazny/strong/internal/pkg/auth"
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
 	localData "github.com/adiazny/strong/internal/pkg/strong/data"
-	"golang.org/x/oauth2"
-	"google.golang.org/api/drive/v2"
-	"google.golang.org/api/driveactivity/v2"
 )
 
 const version = "1.1.0"
@@ -26,16 +23,17 @@ const (
 	defaultAPIPort     = 5000
 	defaultPath        = "./strong.csv"
 	defaultRedirectURL = "http://localhost:4001/v1/redirect"
-	stravaAuthorizeURL = "https://www.strava.com/oauth/authorize"
-	stravaTokenURL     = "https://www.strava.com/oauth/token"
-	stravaScopes       = "activity:write,activity:read"
 )
 
 type config struct {
-	port        int
-	path        string
-	stravaOAuth *oauth2.Config
-	gdriveOAuth *oauth2.Config
+	port               int
+	path               string
+	stravaClientID     string
+	stravaClientSecret string
+	stravaRedirectURL  string
+	gdriveClientID     string
+	gdriveClientSecret string
+	gdriveRedirectURL  string
 }
 
 type application struct {
@@ -45,86 +43,24 @@ type application struct {
 	workouts     []strong.Workout
 }
 
-// TODO
-/*
-	Google Drive:
-	> Authorize and Authenticate
-	>> Look into service accounts https://developers.google.com/identity/protocols/oauth2/service-account
-	> Get google activity for mydrive/Fitness/strong_app_workout_logs folder
-	> Filter latest create/upload "strong.csv" file
-	> Download latest create/upload "strong.csv" file
-
-*/
-
-func tokenFromFile(file string) (*oauth2.Token, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-
-	defer f.Close()
-
-	tok := &oauth2.Token{}
-
-	err = json.NewDecoder(f).Decode(tok)
-	if err != nil {
-		return nil, err
-	}
-
-	return tok, nil
-}
-
 func main() {
 	log := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	var cfg config
 
-	cfg.stravaOAuth = &oauth2.Config{
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  stravaAuthorizeURL,
-			TokenURL: stravaTokenURL,
-		},
-		Scopes: []string{stravaScopes},
-	}
-
-	cfg.gdriveOAuth = &oauth2.Config{
-		Scopes: []string{
-			drive.DriveReadonlyScope,
-			driveactivity.DriveActivityReadonlyScope,
-		},
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://accounts.google.com/o/oauth2/auth",
-			TokenURL: "https://oauth2.googleapis.com/token",
-		},
-		RedirectURL: "http://localhost",
-	}
-
 	flag.IntVar(&cfg.port, "port", defaultAPIPort, "API server port")
 	flag.StringVar(&cfg.path, "path", defaultPath, "Path to strong file")
-	flag.StringVar(&cfg.stravaOAuth.ClientID, "strava-client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
-	flag.StringVar(&cfg.stravaOAuth.ClientSecret, "strava-secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
-	flag.StringVar(&cfg.stravaOAuth.RedirectURL, "redirect", defaultRedirectURL, "Strava Redirect URL")
-	flag.StringVar(&cfg.gdriveOAuth.ClientID, "gdrive-client", os.Getenv("GDRIVE_CLIENT_ID"), "Google Drive API Client ID")
-	flag.StringVar(&cfg.gdriveOAuth.ClientSecret, "gdrive-secret", os.Getenv("GDRIVE_CLIENT_SECRET"), "Google Drive API Client Secret")
+	flag.StringVar(&cfg.stravaClientID, "strava-client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
+	flag.StringVar(&cfg.stravaClientSecret, "strava-secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
+	flag.StringVar(&cfg.stravaRedirectURL, "strava-redirect", defaultRedirectURL, "Strava Redirect URL")
+	flag.StringVar(&cfg.gdriveClientID, "gdrive-client", os.Getenv("GDRIVE_CLIENT_ID"), "Google Drive API Client ID")
+	flag.StringVar(&cfg.gdriveClientSecret, "gdrive-secret", os.Getenv("GDRIVE_CLIENT_SECRET"), "Google Drive API Client Secret")
+	flag.StringVar(&cfg.gdriveRedirectURL, "gdrive-redirect", defaultRedirectURL, "Google Drive Redirect URL")
 	flag.Parse()
 
-	if cfg.stravaOAuth.ClientID == "" {
-		log.Print("strava client id is required")
-		os.Exit(1)
-	}
-
-	if cfg.stravaOAuth.ClientSecret == "" {
-		log.Print("strava client secret is required")
-		os.Exit(1)
-	}
-
-	if cfg.gdriveOAuth.ClientID == "" {
-		log.Print("gdrive client id is required")
-		os.Exit(1)
-	}
-
-	if cfg.gdriveOAuth.ClientSecret == "" {
-		log.Print("gdrive client secret is required")
+	stravaAuth, err := auth.NewProvider(0, cfg.stravaClientID, cfg.stravaClientSecret, cfg.stravaRedirectURL)
+	if err != nil {
+		log.Printf("error creating straca auth provider %v\n", err)
 		os.Exit(1)
 	}
 
@@ -162,7 +98,7 @@ func main() {
 
 	//========================================================================
 	// Strava bootstrap
-	stravaClient := &strava.Provider{Logger: log, Config: cfg.stravaOAuth}
+	stravaClient := &strava.Provider{Logger: log, Config: stravaAuth}
 
 	//========================================================================
 	// API Server Setup
@@ -187,10 +123,10 @@ func main() {
 	// OAuth Checks
 	path, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("error looking up user config directory %v", err)
+		log.Fatalf("error looking up user home directory %v", err)
 	}
 
-	filename := filepath.Join(path, "strong", "tokens.json")
+	filename := filepath.Join(path, "strava", "storage.json")
 
 	token, err := tokenFromFile(filename)
 	if err != nil {

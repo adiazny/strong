@@ -13,6 +13,7 @@ import (
 
 const (
 	createdTimeDescending = "createdTime desc"
+	driveFilesPageSize    = 5
 )
 
 // GOAL:
@@ -48,7 +49,7 @@ func (fp *FileProvider) Import(ctx context.Context) ([]byte, error) {
 func (fp *FileProvider) searchLatest(fileName string) (*drive.File, error) {
 	query := fmt.Sprintf("name = '%s'", fileName)
 
-	fileListCall, err := fp.DriveService.Files.List().PageSize(5).OrderBy(createdTimeDescending).Q(query).Do()
+	fileListCall, err := fp.DriveService.Files.List().PageSize(driveFilesPageSize).OrderBy(createdTimeDescending).Q(query).Do()
 	if err != nil {
 		return nil, err
 	}

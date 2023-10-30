@@ -104,7 +104,7 @@ func (app *application) redirectHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	filename := filepath.Join(path, "strong", "tokens.json")
+	filename := filepath.Join(path, "strava", "storage.json")
 
 	err = saveToken(filename, token)
 	if err != nil {
