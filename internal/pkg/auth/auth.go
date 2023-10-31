@@ -1,9 +1,11 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -14,8 +16,8 @@ import (
 )
 
 const (
-	strava = iota
-	gdrive
+	GDriveService = iota
+	StravaService
 
 	defaultStravaRedirectURL = "http://localhost:4001/v1/redirect"
 	stravaAuthorizeURL       = "https://www.strava.com/oauth/authorize"
@@ -45,18 +47,7 @@ func NewProvider(service int, client, secrect, redirect string) (*Provider, erro
 	var p Provider
 
 	switch service {
-	case strava:
-		p.oauth = &oauth2.Config{
-			ClientID:     client,
-			ClientSecret: secrect,
-			Endpoint: oauth2.Endpoint{
-				AuthURL:  stravaAuthorizeURL,
-				TokenURL: stravaTokenURL,
-			},
-			Scopes:      []string{stravaScopes},
-			RedirectURL: redirect,
-		}
-	case gdrive:
+	case GDriveService:
 		p.oauth = &oauth2.Config{
 			ClientID:     client,
 			ClientSecret: secrect,
@@ -67,6 +58,17 @@ func NewProvider(service int, client, secrect, redirect string) (*Provider, erro
 			Scopes:      []string{drive.DriveReadonlyScope},
 			RedirectURL: redirect,
 		}
+	case StravaService:
+		p.oauth = &oauth2.Config{
+			ClientID:     client,
+			ClientSecret: secrect,
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  stravaAuthorizeURL,
+				TokenURL: stravaTokenURL,
+			},
+			Scopes:      []string{stravaScopes},
+			RedirectURL: redirect,
+		}
 	default:
 		return nil, errors.New("service not found")
 	}
@@ -74,17 +76,16 @@ func NewProvider(service int, client, secrect, redirect string) (*Provider, erro
 	return &p, nil
 }
 
-func (p *Provider) Exists(fileName string) error {
+func (p *Provider) Exists(fileName string) bool {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return fmt.Errorf("error looking up user home directory %v", err)
+		return false
 	}
 
 	path := path.Join(homeDir, fileName)
 
 	_, err = os.Stat(path)
-
-	return err
+	return err == nil
 }
 
 func (p *Provider) FileTokens(fileName string) (*oauth2.Token, error) {
@@ -124,8 +125,15 @@ func (p *Provider) StoreToken(path string, token *oauth2.Token) error {
 	return nil
 }
 
-// Todo: 10/29 continue here next
-func (p *Provider) HttpClient(path string, token *oauth2.Token) (*http.Client, error) {
-	// return a http client from oauth.config with token
-	return nil, nil
+func (p *Provider) AuthCodeURL(state string) string {
+	return p.oauth.AuthCodeURL(state)
+}
+
+func (p *Provider) HttpClient(ctx context.Context, path string) (*http.Client, error) {
+	tokens, err := p.FileTokens(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.oauth.Client(ctx, tokens), nil
 }

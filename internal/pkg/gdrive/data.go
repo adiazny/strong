@@ -20,16 +20,16 @@ const (
 // Search latest strong.csv file
 // Download strong.csv file
 
-type FileProvider struct {
+type Provider struct {
 	//logger
 	Path         string
 	DriveService *drive.Service
 }
 
-func (fp *FileProvider) Import(ctx context.Context) ([]byte, error) {
-	fileName := path.Base(fp.Path)
+func (p *Provider) Import(ctx context.Context) ([]byte, error) {
+	fileName := path.Base(p.Path)
 
-	driveFile, err := fp.searchLatest(fileName)
+	driveFile, err := p.searchLatest(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("error searching drive file %s", fileName)
 	}
@@ -38,7 +38,7 @@ func (fp *FileProvider) Import(ctx context.Context) ([]byte, error) {
 		return nil, fmt.Errorf("error file ID is empty for %s", fileName)
 	}
 
-	fileBytes, err := fp.download(driveFile.Id)
+	fileBytes, err := p.download(driveFile.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -46,10 +46,10 @@ func (fp *FileProvider) Import(ctx context.Context) ([]byte, error) {
 	return fileBytes, nil
 }
 
-func (fp *FileProvider) searchLatest(fileName string) (*drive.File, error) {
+func (p *Provider) searchLatest(fileName string) (*drive.File, error) {
 	query := fmt.Sprintf("name = '%s'", fileName)
 
-	fileListCall, err := fp.DriveService.Files.List().PageSize(driveFilesPageSize).OrderBy(createdTimeDescending).Q(query).Do()
+	fileListCall, err := p.DriveService.Files.List().PageSize(driveFilesPageSize).OrderBy(createdTimeDescending).Q(query).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +61,8 @@ func (fp *FileProvider) searchLatest(fileName string) (*drive.File, error) {
 	return fileListCall.Files[0], nil
 }
 
-func (fp *FileProvider) download(fileId string) ([]byte, error) {
-	response, err := fp.DriveService.Files.Get(fileId).Download()
+func (p *Provider) download(fileId string) ([]byte, error) {
+	response, err := p.DriveService.Files.Get(fileId).Download()
 	if err != nil {
 		return nil, fmt.Errorf("error downloading file %s: %w", fileId, err)
 	}

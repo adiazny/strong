@@ -65,7 +65,7 @@ func saveToken(path string, token *oauth2.Token) error {
 }
 
 func (app *application) uploadNewWorkouts(ctx context.Context, token *oauth2.Token) error {
-	stravaActivities, err := app.stravaClient.GetActivities(ctx, token)
+	stravaActivities, err := app.stravaProvider.GetActivities(ctx, token)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (app *application) uploadNewWorkouts(ctx context.Context, token *oauth2.Tok
 	}
 
 	for _, activity := range newActivities {
-		err := app.stravaClient.PostActivity(ctx, token, activity)
+		err := app.stravaProvider.PostActivity(ctx, token, activity)
 		if err != nil {
 			return err
 		}

@@ -22,8 +22,12 @@ const (
 )
 
 type Provider struct {
-	*log.Logger
-	*auth.Provider
+	log          *log.Logger
+	authProvider *auth.Provider
+}
+
+func NewProvider(log *log.Logger, provider *auth.Provider) *Provider {
+	return &Provider{log: log, authProvider: provider}
 }
 
 type Actvitiy struct {
@@ -53,7 +57,7 @@ func (provider *Provider) GetActivities(ctx context.Context, token *oauth2.Token
 			return nil, fmt.Errorf("error reading response body %w", err)
 		}
 
-		provider.Logger.Printf("%s\n", respBody)
+		provider.log.Printf("%s\n", respBody)
 
 		return nil, fmt.Errorf("error response status code is %d", resp.StatusCode)
 	}
