@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 
 	"golang.org/x/oauth2"
@@ -16,7 +14,7 @@ import (
 )
 
 const (
-	GDriveService = iota
+	GDriveService serviceID = iota
 	StravaService
 
 	defaultStravaRedirectURL = "http://localhost:4001/v1/redirect"
@@ -27,11 +25,14 @@ const (
 	gdriveTokenURL           = "https://oauth2.googleapis.com/token"
 )
 
+type serviceID int
+
 type Provider struct {
-	oauth *oauth2.Config
+	oauth     *oauth2.Config
+	TokenPath string
 }
 
-func NewProvider(service int, client, secrect, redirect string) (*Provider, error) {
+func NewProvider(service serviceID, tokenPath, client, secrect, redirect string) (*Provider, error) {
 	if client == "" {
 		return nil, errors.New("client id is required")
 	}
@@ -73,46 +74,46 @@ func NewProvider(service int, client, secrect, redirect string) (*Provider, erro
 		return nil, errors.New("service not found")
 	}
 
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
+	p.TokenPath = filepath.Join(homeDir, tokenPath)
+
 	return &p, nil
 }
 
-func (p *Provider) Exists(fileName string) bool {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return false
-	}
-
-	path := path.Join(homeDir, fileName)
-
-	_, err = os.Stat(path)
-	return err == nil
+func (p *Provider) TokenNotPresent() bool {
+	_, err := os.Stat(p.TokenPath)
+	return err != nil
 }
 
-func (p *Provider) FileTokens(fileName string) (*oauth2.Token, error) {
-	f, err := os.Open(fileName)
+func (p *Provider) FileTokens() (*oauth2.Token, error) {
+	file, err := os.Open(p.TokenPath)
 	if err != nil {
 		return nil, err
 	}
 
-	defer f.Close()
+	defer file.Close()
 
-	tok := &oauth2.Token{}
+	token := &oauth2.Token{}
 
-	err = json.NewDecoder(f).Decode(tok)
+	err = json.NewDecoder(file).Decode(token)
 	if err != nil {
 		return nil, err
 	}
 
-	return tok, nil
+	return token, nil
 }
 
-func (p *Provider) StoreToken(path string, token *oauth2.Token) error {
-	err := os.MkdirAll(filepath.Dir(path), 0700)
+func (p *Provider) StoreToken(token *oauth2.Token) error {
+	err := os.MkdirAll(filepath.Dir(p.TokenPath), 0700)
 	if err != nil {
 		return fmt.Errorf("unable to create directory: %v", err)
 	}
 
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	f, err := os.OpenFile(p.TokenPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 
 	if err != nil {
 		return fmt.Errorf("unable to store tokens: %v", err)
@@ -129,11 +130,20 @@ func (p *Provider) AuthCodeURL(state string) string {
 	return p.oauth.AuthCodeURL(state)
 }
 
-func (p *Provider) HttpClient(ctx context.Context, path string) (*http.Client, error) {
-	tokens, err := p.FileTokens(path)
+func (p *Provider) HttpClient(ctx context.Context) (*http.Client, error) {
+	tokens, err := p.FileTokens()
 	if err != nil {
 		return nil, err
 	}
 
 	return p.oauth.Client(ctx, tokens), nil
+}
+
+func (p *Provider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	tokens, err := p.oauth.Exchange(ctx, code)
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
 }

@@ -6,23 +6,37 @@ import (
 )
 
 const code = "code"
+const state = "state"
 
-// ParseRequest takes in an http.Request and returns the OAuth Code parameter and an error.
-func ParseRequest(req *http.Request) (string, error) {
+// ParseRequest takes in an http.Request and returns the OAuth code and state parameter and an error.
+func ParseRequest(req *http.Request) (string, string, error) {
 	urlValues := req.URL.Query()
 
-	values, ok := urlValues[code]
+	codes, ok := urlValues[code]
 	if !ok {
-		return "", errors.New("error code parameter not found in request query")
+		return "", "", errors.New("error code parameter not found in request query")
 	}
 
-	if len(values) > 1 {
-		return "", errors.New("error too many values for the code parameter")
+	states, ok := urlValues[state]
+	if !ok {
+		return "", "", errors.New("error code parameter not found in request query")
 	}
 
-	if values[0] == "" {
-		return "", errors.New("error code value cannot be empty")
+	if len(codes) > 1 {
+		return "", "", errors.New("error too many values for the code parameter")
 	}
 
-	return values[0], nil
+	if codes[0] == "" {
+		return "", "", errors.New("error code value cannot be empty")
+	}
+
+	if len(states) > 1 {
+		return "", "", errors.New("error too many values for the state parameter")
+	}
+
+	if states[0] == "" {
+		return "", "", errors.New("error state value cannot be empty")
+	}
+
+	return codes[0], states[0], nil
 }

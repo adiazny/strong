@@ -16,22 +16,18 @@ const (
 	driveFilesPageSize    = 5
 )
 
-// GOAL:
-// Search latest strong.csv file
-// Download strong.csv file
-
 type Provider struct {
 	//logger
-	Path         string
+	DataPath     string
 	DriveService *drive.Service
 }
 
 func (p *Provider) Import(ctx context.Context) ([]byte, error) {
-	fileName := path.Base(p.Path)
+	fileName := path.Base(p.DataPath)
 
 	driveFile, err := p.searchLatest(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("error searching drive file %s", fileName)
+		return nil, fmt.Errorf("error searching drive file %s: %w", fileName, err)
 	}
 
 	if driveFile.Id == "" {
