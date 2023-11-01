@@ -1,20 +1,22 @@
 package main
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
+	"github.com/adiazny/strong/internal/pkg/auth"
+	"github.com/adiazny/strong/internal/pkg/gdrive"
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
-	localData "github.com/adiazny/strong/internal/pkg/strong/data"
-	"golang.org/x/oauth2"
+	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/option"
 )
 
 const version = "1.1.0"
@@ -23,114 +25,68 @@ const (
 	defaultAPIPort     = 5000
 	defaultPath        = "./strong.csv"
 	defaultRedirectURL = "http://localhost:4001/v1/redirect"
-	stravaAuthorizeURL = "https://www.strava.com/oauth/authorize"
-	stravaTokenURL     = "https://www.strava.com/oauth/token"
-	stravaScopes       = "activity:write,activity:read"
+
+	gdriveTokenPath = "gdrive/storage.json"
+	stravaTokenPath = "strava/storage.json"
 )
 
 type config struct {
-	port        int
-	path        string
-	oauthConfig *oauth2.Config
+	port               int
+	path               string
+	stravaClientID     string
+	stravaClientSecret string
+	stravaRedirectURL  string
+	gdriveClientID     string
+	gdriveClientSecret string
+	gdriveRedirectURL  string
 }
 
 type application struct {
-	config       config
-	log          *log.Logger
-	stravaClient *strava.Provider
-	workouts     []strong.Workout
-}
-
-// TODO
-/*
-	Google Drive:
-	> Authorize and Authenticate
-	>> Look into service accounts https://developers.google.com/identity/protocols/oauth2/service-account
-	> Get google activity for mydrive/Fitness/strong_app_workout_logs folder
-	> Filter latest create/upload "strong.csv" file
-	> Download latest create/upload "strong.csv" file
-
-*/
-
-func tokenFromFile(file string) (*oauth2.Token, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-
-	defer f.Close()
-
-	tok := &oauth2.Token{}
-
-	err = json.NewDecoder(f).Decode(tok)
-	if err != nil {
-		return nil, err
-	}
-
-	return tok, nil
+	config             config
+	log                *log.Logger
+	stravaAuthProvider *auth.Provider
+	gdriveAuthProvider *auth.Provider
 }
 
 func main() {
 	log := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	ctx := context.Background()
 
 	var cfg config
 
-	cfg.oauthConfig = &oauth2.Config{
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  stravaAuthorizeURL,
-			TokenURL: stravaTokenURL,
-		},
-		Scopes: []string{stravaScopes},
-	}
-
 	flag.IntVar(&cfg.port, "port", defaultAPIPort, "API server port")
 	flag.StringVar(&cfg.path, "path", defaultPath, "Path to strong file")
-	flag.StringVar(&cfg.oauthConfig.ClientID, "client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
-	flag.StringVar(&cfg.oauthConfig.ClientSecret, "secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
-	flag.StringVar(&cfg.oauthConfig.RedirectURL, "redirect", defaultRedirectURL, "Strava Redirect URL")
+	flag.StringVar(&cfg.stravaClientID, "strava-client", os.Getenv("STRAVA_CLIENT_ID"), "Strava API Client ID")
+	flag.StringVar(&cfg.stravaClientSecret, "strava-secret", os.Getenv("STRAVA_CLIENT_SECRET"), "Strava API Client Secret")
+	flag.StringVar(&cfg.stravaRedirectURL, "strava-redirect", defaultRedirectURL, "Strava Redirect URL")
+	flag.StringVar(&cfg.gdriveClientID, "gdrive-client", os.Getenv("GDRIVE_CLIENT_ID"), "Google Drive API Client ID")
+	flag.StringVar(&cfg.gdriveClientSecret, "gdrive-secret", os.Getenv("GDRIVE_CLIENT_SECRET"), "Google Drive API Client Secret")
+	flag.StringVar(&cfg.gdriveRedirectURL, "gdrive-redirect", defaultRedirectURL, "Google Drive Redirect URL")
 	flag.Parse()
 
-	if cfg.oauthConfig.ClientID == "" {
-		log.Print("strava client id is required")
-		os.Exit(1)
-	}
-
-	if cfg.oauthConfig.ClientSecret == "" {
-		log.Print("strava client secret is required")
-		os.Exit(1)
-	}
-
 	//========================================================================
-	// Local File Implementation
+	// Bootstrap OAuth Providers
 
-	fp := &localData.FileProvider{
-		Path: cfg.path,
-	}
-
-	file, err := fp.Import(context.Background())
+	gdriveAuthProvider, err := auth.NewProvider(auth.GDriveService, gdriveTokenPath, cfg.gdriveClientID, cfg.gdriveClientSecret, cfg.gdriveRedirectURL)
 	if err != nil {
-		log.Printf("error importing file %v\n", err)
+		log.Printf("error creating gdrive auth provider %v\n", err)
 		os.Exit(1)
 	}
-	defer file.Close()
 
-	workouts, err := strong.Process(file)
+	stravaAuthProvider, err := auth.NewProvider(auth.StravaService, stravaTokenPath, cfg.stravaClientID, cfg.stravaClientSecret, cfg.stravaRedirectURL)
 	if err != nil {
-		log.Printf("error processing file %v\n", err)
+		log.Printf("error creating strava auth provider %v\n", err)
 		os.Exit(1)
 	}
 
 	//========================================================================
-	// Strava bootstrap
-	stravaClient := &strava.Provider{Logger: log, Config: cfg.oauthConfig}
+	// API Server Flow
 
-	//========================================================================
-	// API Server Setup
 	app := &application{
-		config:       cfg,
-		log:          log,
-		stravaClient: stravaClient,
-		workouts:     workouts,
+		config:             cfg,
+		log:                log,
+		stravaAuthProvider: stravaAuthProvider,
+		gdriveAuthProvider: gdriveAuthProvider,
 	}
 
 	srv := &http.Server{
@@ -141,37 +97,86 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	serverErrors := make(chan error, 1)
+	go func() {
+		log.Printf("starting api server on %s", srv.Addr)
+		err := srv.ListenAndServe()
+		if !errors.Is(err, http.ErrServerClosed) {
+			log.Printf("error encounted with http server %v\n", err)
+		}
+
+		log.Print("shutting down api server\n")
+	}()
 
 	//========================================================================
-	// OAuth Checks
-	path, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatalf("error looking up user config directory %v", err)
-	}
+	// Google Drive Flow
 
-	filename := filepath.Join(path, "strong", "tokens.json")
+	if gdriveAuthProvider.TokenNotPresent() {
+		gdriveURL := gdriveAuthProvider.AuthCodeURL("gdrive-state")
+		log.Println(gdriveURL)
 
-	token, err := tokenFromFile(filename)
-	if err != nil {
-		// Start api server if token file not found or errored during opening file
-		go func() {
-			log.Printf("starting api server on %s", srv.Addr)
-			serverErrors <- srv.ListenAndServe()
-		}()
-
-		url := cfg.oauthConfig.AuthCodeURL("state")
-		log.Println(url)
-
-		// Blocking main.
-		if err := <-serverErrors; err != nil {
-			log.Fatalf("error with http server %v", err)
+		for gdriveAuthProvider.TokenNotPresent() {
+			time.Sleep(10 * time.Second)
 		}
 	}
 
-	// Upload strava activites if valid token file found
+	gdriveHttpClient, err := gdriveAuthProvider.HttpClient(ctx)
+	if err != nil {
+		log.Fatalf("error creating gdrive http client %v", err)
+	}
+
+	driveService, err := drive.NewService(ctx, option.WithHTTPClient(gdriveHttpClient))
+	if err != nil {
+		log.Fatalf("error to creating gdrive service: %v", err)
+	}
+
+	driveProvider := &gdrive.Provider{
+		DataPath:     "strong.csv",
+		DriveService: driveService,
+	}
+
+	driveBytes, err := driveProvider.Import(ctx)
+	if err != nil {
+		log.Fatalf("error to importing gdrive file: %v", err)
+	}
+
+	var workouts []strong.Workout
+
+	if driveBytes != nil {
+		file := bytes.NewReader(driveBytes)
+
+		workouts, err = strong.Process(file)
+		if err != nil {
+			log.Printf("error processing file %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		log.Printf("empty drive file imported\n")
+		os.Exit(1)
+	}
+
+	//========================================================================
+	// Strava Flow
+
+	if stravaAuthProvider.TokenNotPresent() {
+		stravaURL := stravaAuthProvider.AuthCodeURL("strava-state")
+		log.Println(stravaURL)
+
+		for stravaAuthProvider.TokenNotPresent() {
+			time.Sleep(10 * time.Second)
+		}
+	}
+
+	httpClient, err := stravaAuthProvider.HttpClient(ctx)
+	if err != nil {
+		log.Printf("error creating strava http client\n")
+		os.Exit(1)
+	}
+
+	stravaProvider := strava.NewProvider(log, httpClient)
+
 	log.Print("uploading new workouts to strava")
-	err = app.uploadNewWorkouts(context.Background(), token)
+
+	err = stravaProvider.UploadNewWorkouts(context.Background(), workouts)
 	if err != nil {
 		log.Fatalf("error uploading strava activities %v", err)
 	}

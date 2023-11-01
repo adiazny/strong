@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 
 	"github.com/adiazny/strong/internal/pkg/strong"
-	"golang.org/x/oauth2"
 )
 
 const (
@@ -21,8 +21,12 @@ const (
 )
 
 type Provider struct {
-	*log.Logger
-	*oauth2.Config
+	log        *log.Logger
+	httpClient *http.Client
+}
+
+func NewProvider(log *log.Logger, httpClient *http.Client) *Provider {
+	return &Provider{log: log, httpClient: httpClient}
 }
 
 type Actvitiy struct {
@@ -36,8 +40,8 @@ type Actvitiy struct {
 	Commute        bool    `json:"commute"`
 }
 
-func (provider *Provider) GetActivities(ctx context.Context, token *oauth2.Token) ([]Actvitiy, error) {
-	resp, err := provider.Client(ctx, token).Get(fmt.Sprintf("%s/%s/%s?per_page=200", stravaBaseURL, athletePath, activitiesPath))
+func (provider *Provider) GetActivities() ([]Actvitiy, error) {
+	resp, err := provider.httpClient.Get(fmt.Sprintf("%s/%s/%s?per_page=200", stravaBaseURL, athletePath, activitiesPath))
 	if err != nil {
 		return nil, fmt.Errorf("error performing http get request: %w", err)
 	}
@@ -52,7 +56,7 @@ func (provider *Provider) GetActivities(ctx context.Context, token *oauth2.Token
 			return nil, fmt.Errorf("error reading response body %w", err)
 		}
 
-		provider.Logger.Printf("%s\n", respBody)
+		provider.log.Printf("%s\n", respBody)
 
 		return nil, fmt.Errorf("error response status code is %d", resp.StatusCode)
 	}
@@ -72,7 +76,7 @@ func (provider *Provider) GetActivities(ctx context.Context, token *oauth2.Token
 	return activities, nil
 }
 
-func (provider *Provider) PostActivity(ctx context.Context, token *oauth2.Token, activity Actvitiy) error {
+func (provider *Provider) PostActivity(activity Actvitiy) error {
 	activityData, err := json.Marshal(activity)
 	if err != nil {
 		return fmt.Errorf("error marshling activity: %w", err)
@@ -80,7 +84,7 @@ func (provider *Provider) PostActivity(ctx context.Context, token *oauth2.Token,
 
 	bodyReader := bytes.NewReader(activityData)
 
-	resp, err := provider.Client(ctx, token).Post(fmt.Sprintf("%s/%s", stravaBaseURL, activitiesPath), "application/json", bodyReader)
+	resp, err := provider.httpClient.Post(fmt.Sprintf("%s/%s", stravaBaseURL, activitiesPath), "application/json", bodyReader)
 	if err != nil {
 		return fmt.Errorf("error performing http post request: %w", err)
 	}
@@ -94,6 +98,30 @@ func (provider *Provider) PostActivity(ctx context.Context, token *oauth2.Token,
 	return nil
 }
 
+func (provider *Provider) UploadNewWorkouts(ctx context.Context, workouts []strong.Workout) error {
+	stravaActivities, err := provider.GetActivities()
+	if err != nil {
+		return err
+	}
+
+	newStrongWorkouts := filterNewWorkouts(stravaActivities, workouts)
+
+	newActivities := convertToStrava(newStrongWorkouts)
+
+	if len(newActivities) == 0 {
+		return errors.New("no strava activities to post")
+	}
+
+	for _, activity := range newActivities {
+		err := provider.PostActivity(activity)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func MapStrongWorkout(workout strong.Workout) Actvitiy {
 	return Actvitiy{
 		Name:           workout.Name,
@@ -102,4 +130,33 @@ func MapStrongWorkout(workout strong.Workout) Actvitiy {
 		ElapsedTime:    int(workout.Duration.Seconds()),
 		Description:    workout.Description(),
 	}
+}
+
+func filterNewWorkouts(activities []Actvitiy, workouts []strong.Workout) []strong.Workout {
+	stravaDateTimeMap := make(map[string]struct{})
+	newStrongWorkouts := make([]strong.Workout, 0)
+
+	for _, activity := range activities {
+		stravaDateTimeMap[activity.StartDateLocal] = struct{}{}
+	}
+
+	for _, strong := range workouts {
+		if _, found := stravaDateTimeMap[strong.Date]; !found {
+			newStrongWorkouts = append(newStrongWorkouts, strong)
+		}
+	}
+
+	return newStrongWorkouts
+}
+
+func convertToStrava(workouts []strong.Workout) []Actvitiy {
+	newActivities := make([]Actvitiy, 0)
+
+	for _, workout := range workouts {
+		activity := MapStrongWorkout(workout)
+
+		newActivities = append(newActivities, activity)
+	}
+
+	return newActivities
 }

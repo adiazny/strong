@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -281,7 +280,7 @@ func FormatDateTime(dateTime string) (string, error) {
 	return t.Format("2006-01-02T15:04:05Z"), nil
 }
 
-func Process(file *os.File) ([]Workout, error) {
+func Process(file io.Reader) ([]Workout, error) {
 	records, err := ParseRecords(file)
 	if err != nil {
 		return nil, fmt.Errorf("error reading csv file %w", err)
