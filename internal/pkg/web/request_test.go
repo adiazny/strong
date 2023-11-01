@@ -10,29 +10,41 @@ import (
 
 func TestParseRequest(t *testing.T) {
 	tests := []struct {
-		name    string
-		req     *http.Request
-		want    string
-		wantErr bool
+		name      string
+		req       *http.Request
+		wantCode  string
+		wantState string
+		wantErr   bool
 	}{
 		{
-			name:    "success",
-			req:     newRequest("code=1234567890"),
-			want:    "1234567890",
-			wantErr: false,
+			name:      "success gdrive request",
+			req:       newRequest("state=gdrive-state&code=1234567890"),
+			wantCode:  "1234567890",
+			wantState: "gdrive-state",
+			wantErr:   false,
 		},
 		{
-			name:    "empty code value",
-			req:     newRequest("code="),
+			name:    "empty code param value",
+			req:     newRequest("state=gdrive-state&code="),
+			wantErr: true,
+		},
+		{
+			name:    "empty state param value",
+			req:     newRequest("state=&code=1234567890"),
 			wantErr: true,
 		},
 		{
 			name:    "code param not present",
-			req:     newRequest(""),
+			req:     newRequest("state=gdrive-state"),
 			wantErr: true,
 		},
 		{
-			name:    "code param multiple values",
+			name:    "state param not present",
+			req:     newRequest("code=1234567890"),
+			wantErr: true,
+		},
+		{
+			name:    "multiple code params",
 			req:     newRequest("code=1234567890&code=5647382910"),
 			wantErr: true,
 		},
@@ -44,14 +56,18 @@ func TestParseRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := web.ParseRequest(tt.req)
+			code, state, err := web.ParseRequest(tt.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseRequest() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			if got != tt.want {
-				t.Errorf("got %v, want %v", got, tt.want)
+			if code != tt.wantCode {
+				t.Errorf("got %v, want %v", code, tt.wantCode)
+			}
+
+			if state != tt.wantState {
+				t.Errorf("got %v, want %v", code, tt.wantState)
 			}
 		})
 	}
