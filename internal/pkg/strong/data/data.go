@@ -7,11 +7,11 @@ import (
 )
 
 type FileProvider struct {
-	Path string
+	FilePath string
 }
 
 func (fp *FileProvider) Import(ctx context.Context) ([]byte, error) {
-	file, err := os.Open(fp.Path)
+	file, err := os.Open(fp.FilePath)
 	if err != nil {
 		return nil, err
 	}
