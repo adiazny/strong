@@ -19,6 +19,11 @@ import (
 	"google.golang.org/api/option"
 )
 
+// TODO: write unit tests for:
+// strong/data pkg
+// gdrive pkg
+// auth pkg
+
 const version = "1.1.0"
 
 const (
