@@ -28,6 +28,8 @@ const (
 
 	gdriveTokenPath = "gdrive/storage.json"
 	stravaTokenPath = "strava/storage.json"
+
+	stravaBaseURL = "https://www.strava.com/api/v3"
 )
 
 type config struct {
@@ -172,7 +174,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	stravaProvider := strava.NewProvider(log, httpClient)
+	stravaProvider := strava.NewProvider(log, stravaBaseURL, httpClient)
 
 	log.Print("uploading new workouts to strava")
 

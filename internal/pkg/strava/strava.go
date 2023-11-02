@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	stravaBaseURL  = "https://www.strava.com/api/v3"
 	activitiesPath = "activities"
 	athletePath    = "athlete"
 	weightTraining = "WeightTraining"
@@ -22,11 +21,12 @@ const (
 
 type Provider struct {
 	log        *log.Logger
+	baseURL    string
 	httpClient *http.Client
 }
 
-func NewProvider(log *log.Logger, httpClient *http.Client) *Provider {
-	return &Provider{log: log, httpClient: httpClient}
+func NewProvider(log *log.Logger, baseURL string, httpClient *http.Client) *Provider {
+	return &Provider{log: log, baseURL: baseURL, httpClient: httpClient}
 }
 
 type Actvitiy struct {
@@ -41,7 +41,7 @@ type Actvitiy struct {
 }
 
 func (provider *Provider) GetActivities() ([]Actvitiy, error) {
-	resp, err := provider.httpClient.Get(fmt.Sprintf("%s/%s/%s?per_page=200", stravaBaseURL, athletePath, activitiesPath))
+	resp, err := provider.httpClient.Get(fmt.Sprintf("%s/%s/%s?per_page=200", provider.baseURL, athletePath, activitiesPath))
 	if err != nil {
 		return nil, fmt.Errorf("error performing http get request: %w", err)
 	}
@@ -84,7 +84,7 @@ func (provider *Provider) PostActivity(activity Actvitiy) error {
 
 	bodyReader := bytes.NewReader(activityData)
 
-	resp, err := provider.httpClient.Post(fmt.Sprintf("%s/%s", stravaBaseURL, activitiesPath), "application/json", bodyReader)
+	resp, err := provider.httpClient.Post(fmt.Sprintf("%s/%s", provider.baseURL, activitiesPath), "application/json", bodyReader)
 	if err != nil {
 		return fmt.Errorf("error performing http post request: %w", err)
 	}
@@ -106,7 +106,7 @@ func (provider *Provider) UploadNewWorkouts(ctx context.Context, workouts []stro
 
 	newStrongWorkouts := filterNewWorkouts(stravaActivities, workouts)
 
-	newActivities := convertToStrava(newStrongWorkouts)
+	newActivities := convertToStravaActivity(newStrongWorkouts)
 
 	if len(newActivities) == 0 {
 		return errors.New("no strava activities to post")
@@ -149,7 +149,7 @@ func filterNewWorkouts(activities []Actvitiy, workouts []strong.Workout) []stron
 	return newStrongWorkouts
 }
 
-func convertToStrava(workouts []strong.Workout) []Actvitiy {
+func convertToStravaActivity(workouts []strong.Workout) []Actvitiy {
 	newActivities := make([]Actvitiy, 0)
 
 	for _, workout := range workouts {
