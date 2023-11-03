@@ -34,4 +34,6 @@ examples/*.csv
 
 #
 *.env
-*.json
+storage.json
+token.json
+tokens.json
