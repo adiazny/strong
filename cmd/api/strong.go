@@ -21,7 +21,12 @@ import (
 
 // TODO: write unit tests for:
 // gdrive pkg
-// auth pkg
+
+// Backlog
+// - unit testing auth.StoreToken and auth.Exchange might require auth.Provider refactoring
+// - Reorganize /cmd and /cmd/api structure
+// - Re-implement reading external variables
+// - Redo and standardize Makefile to my liking
 
 const version = "1.1.0"
 

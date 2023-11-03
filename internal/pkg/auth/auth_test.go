@@ -32,7 +32,7 @@ func TestNewProvider(t *testing.T) {
 		},
 		{
 			name:    "success strava",
-			args:    args{service: auth.GDriveService, tokenPath: "strava/storage.json", clientID: "1234567890", clientSecret: "strava-client-secret", redirectURL: "http://localhost:4001/v1/redirect"},
+			args:    args{service: auth.StravaService, tokenPath: "strava/storage.json", clientID: "1234567890", clientSecret: "strava-client-secret", redirectURL: "http://localhost:4001/v1/redirect"},
 			wantErr: false,
 		},
 		{
@@ -114,7 +114,6 @@ func TestProvider_FileTokens(t *testing.T) {
 		want    *oauth2.Token
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{
 			name: "success",
 			want: &oauth2.Token{
@@ -178,7 +177,6 @@ func TestProvider_AuthCodeURL(t *testing.T) {
 		state string
 		want  string
 	}{
-		// TODO: Add test cases.
 		{
 			name:  "success",
 			state: "gdrive-state",
@@ -202,31 +200,35 @@ func TestProvider_AuthCodeURL(t *testing.T) {
 }
 
 func TestProvider_HttpClient(t *testing.T) {
-	type args struct {
-		ctx context.Context
-	}
 	tests := []struct {
 		name    string
-		p       *auth.Provider
-		args    args
 		want    *http.Client
 		wantErr bool
 	}{
 		// TODO: Add test cases.
+		{
+			name:    "success",
+			want:    nil,
+			wantErr: false,
+		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tt.p.HttpClient(tt.args.ctx)
+			p := createProvider(t, "")
+
+			got, err := p.HttpClient(context.Background())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Provider.HttpClient() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Provider.HttpClient() = %v, want %v", got, tt.want)
+
+			if got == nil {
+				t.Errorf("Provider.HttpClient() is %v", got)
 			}
 		})
 	}
