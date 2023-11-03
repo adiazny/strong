@@ -27,6 +27,8 @@ import (
 // - Reorganize /cmd and /cmd/api structure
 // - Re-implement reading external variables
 // - Redo and standardize Makefile to my liking
+// - Swap to std logger and enhance logging
+// - OAuth improvements - read into TokenSource usage https://pkg.go.dev/cloud.google.com/go#readme-authorization
 
 const version = "1.1.0"
 

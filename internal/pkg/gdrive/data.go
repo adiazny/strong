@@ -1,4 +1,4 @@
-// Package gdrive will handle downloading the latest strong file
+// Package gdrive will handle downloading the latest strong csv file
 package gdrive
 
 import (
@@ -17,7 +17,6 @@ const (
 )
 
 type Provider struct {
-	//logger
 	DataPath     string
 	DriveService *drive.Service
 }
