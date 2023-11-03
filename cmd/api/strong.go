@@ -132,12 +132,12 @@ func main() {
 		}
 	}
 
-	gdriveHttpClient, err := gdriveAuthProvider.HttpClient(ctx)
+	gdriveHTTPClient, err := gdriveAuthProvider.HTTPClient(ctx)
 	if err != nil {
 		log.Fatalf("error creating gdrive http client %v", err)
 	}
 
-	driveService, err := drive.NewService(ctx, option.WithHTTPClient(gdriveHttpClient))
+	driveService, err := drive.NewService(ctx, option.WithHTTPClient(gdriveHTTPClient))
 	if err != nil {
 		log.Fatalf("error to creating gdrive service: %v", err)
 	}
@@ -179,7 +179,7 @@ func main() {
 		}
 	}
 
-	httpClient, err := stravaAuthProvider.HttpClient(ctx)
+	httpClient, err := stravaAuthProvider.HTTPClient(ctx)
 	if err != nil {
 		log.Printf("error creating strava http client\n")
 		os.Exit(1)

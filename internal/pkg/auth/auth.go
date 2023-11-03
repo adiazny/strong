@@ -129,7 +129,7 @@ func (p *Provider) AuthCodeURL(state string) string {
 	return p.oauth.AuthCodeURL(state)
 }
 
-func (p *Provider) HttpClient(ctx context.Context) (*http.Client, error) {
+func (p *Provider) HTTPClient(ctx context.Context) (*http.Client, error) {
 	tokens, err := p.FileTokens()
 	if err != nil {
 		return nil, err

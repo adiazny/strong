@@ -56,10 +56,10 @@ func (p *Provider) searchLatest(fileName string) (*drive.File, error) {
 	return fileListCall.Files[0], nil
 }
 
-func (p *Provider) download(fileId string) ([]byte, error) {
-	response, err := p.DriveService.Files.Get(fileId).Download()
+func (p *Provider) download(fileID string) ([]byte, error) {
+	response, err := p.DriveService.Files.Get(fileID).Download()
 	if err != nil {
-		return nil, fmt.Errorf("error downloading file %s: %w", fileId, err)
+		return nil, fmt.Errorf("error downloading file %s: %w", fileID, err)
 	}
 
 	defer response.Body.Close()

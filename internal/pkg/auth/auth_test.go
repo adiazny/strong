@@ -221,7 +221,7 @@ func TestProvider_HttpClient(t *testing.T) {
 
 			p := createProvider(t, "")
 
-			got, err := p.HttpClient(context.Background())
+			got, err := p.HTTPClient(context.Background())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Provider.HttpClient() error = %v, wantErr %v", err, tt.wantErr)
 				return
