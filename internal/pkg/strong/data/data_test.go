@@ -1,4 +1,4 @@
-package data
+package data_test
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"path"
 	"reflect"
 	"testing"
+
+	"github.com/adiazny/strong/internal/pkg/strong/data"
 )
 
 func TestFileProvider_Import(t *testing.T) {
@@ -39,7 +41,7 @@ func TestFileProvider_Import(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			fp := &FileProvider{
+			fp := &data.FileProvider{
 				FilePath: tt.strongFilePath,
 			}
 			got, err := fp.Import(context.Background())

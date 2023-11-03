@@ -20,7 +20,6 @@ import (
 )
 
 // TODO: write unit tests for:
-// strong/data pkg
 // gdrive pkg
 // auth pkg
 

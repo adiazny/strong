@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	GDriveService serviceID = iota
+	GDriveService ServiceID = iota
 	StravaService
 
 	defaultStravaRedirectURL = "http://localhost:4001/v1/redirect"
@@ -25,23 +25,23 @@ const (
 	gdriveTokenURL           = "https://oauth2.googleapis.com/token"
 )
 
-type serviceID int
+type ServiceID int
 
 type Provider struct {
 	oauth     *oauth2.Config
 	TokenPath string
 }
 
-func NewProvider(service serviceID, tokenPath, client, secrect, redirect string) (*Provider, error) {
-	if client == "" {
+func NewProvider(service ServiceID, tokenPath, clientID, clientSecret, redirectURL string) (*Provider, error) {
+	if clientID == "" {
 		return nil, errors.New("client id is required")
 	}
 
-	if secrect == "" {
+	if clientSecret == "" {
 		return nil, errors.New("client secret is required")
 	}
 
-	if redirect == "" {
+	if redirectURL == "" {
 		return nil, errors.New("redirect url is required")
 	}
 
@@ -50,33 +50,33 @@ func NewProvider(service serviceID, tokenPath, client, secrect, redirect string)
 	switch service {
 	case GDriveService:
 		p.oauth = &oauth2.Config{
-			ClientID:     client,
-			ClientSecret: secrect,
+			ClientID:     clientID,
+			ClientSecret: clientSecret,
 			Endpoint: oauth2.Endpoint{
 				AuthURL:  gdriveAuthorizeURL,
 				TokenURL: gdriveTokenURL,
 			},
 			Scopes:      []string{drive.DriveReadonlyScope},
-			RedirectURL: redirect,
+			RedirectURL: redirectURL,
 		}
 	case StravaService:
 		p.oauth = &oauth2.Config{
-			ClientID:     client,
-			ClientSecret: secrect,
+			ClientID:     clientID,
+			ClientSecret: clientSecret,
 			Endpoint: oauth2.Endpoint{
 				AuthURL:  stravaAuthorizeURL,
 				TokenURL: stravaTokenURL,
 			},
 			Scopes:      []string{stravaScopes},
-			RedirectURL: redirect,
+			RedirectURL: redirectURL,
 		}
 	default:
-		return nil, errors.New("service not found")
+		return nil, errors.New("service id for auth provider not found")
 	}
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error returning the user's home directory %w", err)
 	}
 
 	p.TokenPath = filepath.Join(homeDir, tokenPath)
@@ -110,13 +110,12 @@ func (p *Provider) FileTokens() (*oauth2.Token, error) {
 func (p *Provider) StoreToken(token *oauth2.Token) error {
 	err := os.MkdirAll(filepath.Dir(p.TokenPath), 0700)
 	if err != nil {
-		return fmt.Errorf("unable to create directory: %v", err)
+		return fmt.Errorf("unable to create directory: %w", err)
 	}
 
 	f, err := os.OpenFile(p.TokenPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-
 	if err != nil {
-		return fmt.Errorf("unable to store tokens: %v", err)
+		return fmt.Errorf("unable to store tokens: %w", err)
 	}
 
 	defer f.Close()
