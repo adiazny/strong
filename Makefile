@@ -62,7 +62,7 @@ test/cover:
 .PHONY: build
 build:
 	@rm -f ${BUILD_DIR}/${BINARY_NAME}
-	@GOARCH=amd64 GOOS=linux go build -v -trimpath -o=${BUILD_DIR}/${BINARY_NAME} ${CMD_DIR}/api
+	@GOARCH=amd64 GOOS=darwin go build -v -trimpath -o=${BUILD_DIR}/${BINARY_NAME} ${CMD_DIR}/api
 
 ## run: run the  application
 .PHONY: run
