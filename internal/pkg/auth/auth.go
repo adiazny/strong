@@ -2,12 +2,8 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/api/drive/v2"
@@ -28,11 +24,11 @@ const (
 type serviceID int
 
 type Provider struct {
-	oauth     *oauth2.Config
-	TokenPath string
+	Config  *oauth2.Config
+	Storage Storage
 }
 
-func NewProvider(service serviceID, tokenPath, client, secrect, redirect string) (*Provider, error) {
+func NewProvider(service serviceID, tokenPath, client, secrect, redirect string, store Storage) (*Provider, error) {
 	if client == "" {
 		return nil, errors.New("client id is required")
 	}
@@ -49,7 +45,7 @@ func NewProvider(service serviceID, tokenPath, client, secrect, redirect string)
 
 	switch service {
 	case GDriveService:
-		p.oauth = &oauth2.Config{
+		p.Config = &oauth2.Config{
 			ClientID:     client,
 			ClientSecret: secrect,
 			Endpoint: oauth2.Endpoint{
@@ -60,7 +56,7 @@ func NewProvider(service serviceID, tokenPath, client, secrect, redirect string)
 			RedirectURL: redirect,
 		}
 	case StravaService:
-		p.oauth = &oauth2.Config{
+		p.Config = &oauth2.Config{
 			ClientID:     client,
 			ClientSecret: secrect,
 			Endpoint: oauth2.Endpoint{
@@ -74,76 +70,40 @@ func NewProvider(service serviceID, tokenPath, client, secrect, redirect string)
 		return nil, errors.New("service not found")
 	}
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-
-	p.TokenPath = filepath.Join(homeDir, tokenPath)
+	p.Storage = store
 
 	return &p, nil
 }
 
-func (p *Provider) TokenNotPresent() bool {
-	_, err := os.Stat(p.TokenPath)
-	return err != nil
+func (p *Provider) AuthCodeURL(state string) string {
+	return p.Config.AuthCodeURL(state)
 }
 
-func (p *Provider) FileTokens() (*oauth2.Token, error) {
-	file, err := os.Open(p.TokenPath)
+//======================
+// NEW
+
+// Exchange stores a token after retrieval
+func (p *Provider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	token, err := p.Config.Exchange(ctx, code)
 	if err != nil {
 		return nil, err
 	}
 
-	defer file.Close()
-
-	token := &oauth2.Token{}
-
-	err = json.NewDecoder(file).Decode(token)
-	if err != nil {
+	if err := p.Storage.SetToken(token); err != nil {
 		return nil, err
 	}
 
 	return token, nil
 }
 
-func (p *Provider) StoreToken(token *oauth2.Token) error {
-	err := os.MkdirAll(filepath.Dir(p.TokenPath), 0700)
-	if err != nil {
-		return fmt.Errorf("unable to create directory: %v", err)
-	}
-
-	f, err := os.OpenFile(p.TokenPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-
-	if err != nil {
-		return fmt.Errorf("unable to store tokens: %v", err)
-	}
-
-	defer f.Close()
-
-	json.NewEncoder(f).Encode(token)
-
-	return nil
+// TokenSource can be passed a token which
+// is stored, or when a new one is retrieved,
+// that's stored
+func (p *Provider) TokenSource(ctx context.Context, t *oauth2.Token) oauth2.TokenSource {
+	return StorageTokenSource(ctx, p, t)
 }
 
-func (p *Provider) AuthCodeURL(state string) string {
-	return p.oauth.AuthCodeURL(state)
-}
-
-func (p *Provider) HttpClient(ctx context.Context) (*http.Client, error) {
-	tokens, err := p.FileTokens()
-	if err != nil {
-		return nil, err
-	}
-
-	return p.oauth.Client(ctx, tokens), nil
-}
-
-func (p *Provider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
-	tokens, err := p.oauth.Exchange(ctx, code)
-	if err != nil {
-		return nil, err
-	}
-
-	return tokens, nil
+// Client is attached to our TokenSource
+func (p *Provider) Client(ctx context.Context, t *oauth2.Token) *http.Client {
+	return oauth2.NewClient(ctx, p.TokenSource(ctx, t))
 }

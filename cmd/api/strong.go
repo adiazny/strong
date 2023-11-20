@@ -13,6 +13,7 @@ import (
 
 	"github.com/adiazny/strong/internal/pkg/auth"
 	"github.com/adiazny/strong/internal/pkg/gdrive"
+	"github.com/adiazny/strong/internal/pkg/store"
 	"github.com/adiazny/strong/internal/pkg/strava"
 	"github.com/adiazny/strong/internal/pkg/strong"
 	"google.golang.org/api/drive/v3"
@@ -65,15 +66,30 @@ func main() {
 	flag.Parse()
 
 	//========================================================================
+	// Create files
+
+	gStore, err := store.NewFile(gdriveTokenPath)
+	if err != nil {
+		log.Printf("error creating google drive file store %v\n", err)
+		os.Exit(1)
+	}
+
+	stravaStore, err := store.NewFile(stravaTokenPath)
+	if err != nil {
+		log.Printf("error creating strava file store %v\n", err)
+		os.Exit(1)
+	}
+
+	//========================================================================
 	// Bootstrap OAuth Providers
 
-	gdriveAuthProvider, err := auth.NewProvider(auth.GDriveService, gdriveTokenPath, cfg.gdriveClientID, cfg.gdriveClientSecret, cfg.gdriveRedirectURL)
+	gdriveAuthProvider, err := auth.NewProvider(auth.GDriveService, gdriveTokenPath, cfg.gdriveClientID, cfg.gdriveClientSecret, cfg.gdriveRedirectURL, gStore)
 	if err != nil {
 		log.Printf("error creating gdrive auth provider %v\n", err)
 		os.Exit(1)
 	}
 
-	stravaAuthProvider, err := auth.NewProvider(auth.StravaService, stravaTokenPath, cfg.stravaClientID, cfg.stravaClientSecret, cfg.stravaRedirectURL)
+	stravaAuthProvider, err := auth.NewProvider(auth.StravaService, stravaTokenPath, cfg.stravaClientID, cfg.stravaClientSecret, cfg.stravaRedirectURL, stravaStore)
 	if err != nil {
 		log.Printf("error creating strava auth provider %v\n", err)
 		os.Exit(1)
@@ -110,19 +126,17 @@ func main() {
 	//========================================================================
 	// Google Drive Flow
 
-	if gdriveAuthProvider.TokenNotPresent() {
+	token, err := gdriveAuthProvider.Storage.GetToken()
+	if err != nil || !token.Valid() {
 		gdriveURL := gdriveAuthProvider.AuthCodeURL("gdrive-state")
 		log.Println(gdriveURL)
 
-		for gdriveAuthProvider.TokenNotPresent() {
+		for gStore.FileNotPresent() {
 			time.Sleep(10 * time.Second)
 		}
 	}
 
-	gdriveHttpClient, err := gdriveAuthProvider.HttpClient(ctx)
-	if err != nil {
-		log.Fatalf("error creating gdrive http client %v", err)
-	}
+	gdriveHttpClient := gdriveAuthProvider.Client(ctx, token)
 
 	driveService, err := drive.NewService(ctx, option.WithHTTPClient(gdriveHttpClient))
 	if err != nil {
@@ -157,27 +171,25 @@ func main() {
 	//========================================================================
 	// Strava Flow
 
-	if stravaAuthProvider.TokenNotPresent() {
+	token, err = stravaAuthProvider.Storage.GetToken()
+	if err != nil || !token.Valid() {
 		stravaURL := stravaAuthProvider.AuthCodeURL("strava-state")
 		log.Println(stravaURL)
 
-		for stravaAuthProvider.TokenNotPresent() {
+		// This should be the filestorage method
+		for stravaStore.FileNotPresent() {
 			time.Sleep(10 * time.Second)
 		}
 	}
 
-	httpClient, err := stravaAuthProvider.HttpClient(ctx)
-	if err != nil {
-		log.Printf("error creating strava http client\n")
-		os.Exit(1)
-	}
+	stravaClient := stravaAuthProvider.Client(ctx, token)
 
-	stravaProvider := strava.NewProvider(log, httpClient)
-
-	log.Print("uploading new workouts to strava")
+	stravaProvider := strava.NewProvider(log, stravaClient)
 
 	err = stravaProvider.UploadNewWorkouts(context.Background(), workouts)
 	if err != nil {
 		log.Fatalf("error uploading strava activities %v", err)
 	}
+
+	log.Print("uploaded new workouts to strava")
 }
