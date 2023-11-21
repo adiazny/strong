@@ -18,17 +18,22 @@ import (
 	"github.com/adiazny/strong/internal/pkg/strong"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
+
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 const version = "1.1.0"
 
 const (
-	defaultAPIPort     = 5000
+	defaultAPIPort     = 4001
 	defaultPath        = "./strong.csv"
 	defaultRedirectURL = "http://localhost:4001/v1/redirect"
 
 	gdriveTokenPath = "gdrive/storage.json"
 	stravaTokenPath = "strava/storage.json"
+
+	s3BucketName = "diaz.bucket.1"
 )
 
 type config struct {
@@ -68,35 +73,54 @@ func main() {
 	//=========
 	// Temp S3 Testing
 
-	store.Setup()
-	log.Print("s3 exit\n")
-	os.Exit(1)
+	awsConfig, err := awsConfig.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		fmt.Println("Couldn't load default configuration. Have you set up your AWS account?")
+		fmt.Println(err)
+		return
+	}
+
+	s3Client := s3.NewFromConfig(awsConfig)
+
+	gDriveS3Store := &store.S3Object{
+		Log:        log,
+		Client:     s3Client,
+		BucketName: s3BucketName,
+		ObjectKey:  gdriveTokenPath,
+	}
+
+	stravaS3Store := &store.S3Object{
+		Log:        log,
+		Client:     s3Client,
+		BucketName: s3BucketName,
+		ObjectKey:  stravaTokenPath,
+	}
 
 	//========================================================================
 	// Create files
 
-	gStore, err := store.NewFile(gdriveTokenPath)
-	if err != nil {
-		log.Printf("error creating google drive file store %v\n", err)
-		os.Exit(1)
-	}
+	// gStore, err := store.NewFile(gdriveTokenPath)
+	// if err != nil {
+	// 	log.Printf("error creating google drive file store %v\n", err)
+	// 	os.Exit(1)
+	// }
 
-	stravaStore, err := store.NewFile(stravaTokenPath)
-	if err != nil {
-		log.Printf("error creating strava file store %v\n", err)
-		os.Exit(1)
-	}
+	// stravaStore, err := store.NewFile(stravaTokenPath)
+	// if err != nil {
+	// 	log.Printf("error creating strava file store %v\n", err)
+	// 	os.Exit(1)
+	// }
 
 	//========================================================================
 	// Bootstrap OAuth Providers
 
-	gdriveAuthProvider, err := auth.NewProvider(auth.GDriveService, gdriveTokenPath, cfg.gdriveClientID, cfg.gdriveClientSecret, cfg.gdriveRedirectURL, gStore)
+	gdriveAuthProvider, err := auth.NewProvider(auth.GDriveService, gdriveTokenPath, cfg.gdriveClientID, cfg.gdriveClientSecret, cfg.gdriveRedirectURL, gDriveS3Store)
 	if err != nil {
 		log.Printf("error creating gdrive auth provider %v\n", err)
 		os.Exit(1)
 	}
 
-	stravaAuthProvider, err := auth.NewProvider(auth.StravaService, stravaTokenPath, cfg.stravaClientID, cfg.stravaClientSecret, cfg.stravaRedirectURL, stravaStore)
+	stravaAuthProvider, err := auth.NewProvider(auth.StravaService, stravaTokenPath, cfg.stravaClientID, cfg.stravaClientSecret, cfg.stravaRedirectURL, stravaS3Store)
 	if err != nil {
 		log.Printf("error creating strava auth provider %v\n", err)
 		os.Exit(1)
@@ -138,7 +162,7 @@ func main() {
 		gdriveURL := gdriveAuthProvider.AuthCodeURL("gdrive-state")
 		log.Println(gdriveURL)
 
-		for gStore.FileNotPresent() {
+		for gDriveS3Store.KeyNotPresent() {
 			time.Sleep(10 * time.Second)
 		}
 	}
@@ -184,7 +208,7 @@ func main() {
 		log.Println(stravaURL)
 
 		// This should be the filestorage method
-		for stravaStore.FileNotPresent() {
+		for stravaS3Store.KeyNotPresent() {
 			time.Sleep(10 * time.Second)
 		}
 	}

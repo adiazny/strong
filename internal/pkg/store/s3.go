@@ -1,105 +1,68 @@
 package store
 
 import (
+	"bytes"
 	"context"
-	"fmt"
-	"io"
+	"encoding/json"
 	"log"
-	"os"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
+	"golang.org/x/oauth2"
 )
 
-// Goals:
-// via UI: create bucket for strong app needs
-// import latest aws-sdk-go https://pkg.go.dev/github.com/aws/aws-sdk-go-v2
-// implement storage interface methods
-
-func Setup() {
-	sdkConfig, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		fmt.Println("Couldn't load default configuration. Have you set up your AWS account?")
-		fmt.Println(err)
-		return
-	}
-
-	s3Client := s3.NewFromConfig(sdkConfig)
-
-	//upload
-	err = uploadFile(s3Client, "diaz.bucket.1", "newObj", "strong-diagram.jpg")
-	if err != nil {
-		fmt.Printf("Couldn't upload a file. Here's why: %v\n", err)
-		return
-	}
-
-	//download
-	downloadFile(s3Client, "diaz.bucket.1", "newObj", "delete-me.jpg")
-
-	count := 10
-
-	fmt.Printf("Let's list up to %v buckets for your account.\n", count)
-
-	result, err := s3Client.ListBuckets(context.TODO(), &s3.ListBucketsInput{})
-	if err != nil {
-		fmt.Printf("Couldn't list buckets for your account. Here's why: %v\n", err)
-		return
-	}
-
-	if len(result.Buckets) == 0 {
-		fmt.Println("You don't have any buckets!")
-	} else {
-		if count > len(result.Buckets) {
-			count = len(result.Buckets)
-		}
-		for _, bucket := range result.Buckets[:count] {
-			fmt.Printf("\t%v\n", *bucket.Name)
-		}
-	}
+type S3Object struct {
+	Log *log.Logger
+	*s3.Client
+	BucketName string
+	ObjectKey  string
 }
 
-// UploadFile reads from a file and puts the data into an object in a bucket.
-func uploadFile(client *s3.Client, bucketName string, objectKey string, fileName string) error {
-	file, err := os.Open(fileName)
-	if err != nil {
-		log.Printf("Couldn't open file %v to upload. Here's why: %v\n", fileName, err)
-	} else {
-		defer file.Close()
-		_, err = client.PutObject(context.TODO(), &s3.PutObjectInput{
-			Bucket: aws.String(bucketName),
-			Key:    aws.String(objectKey),
-			Body:   file,
-		})
-		if err != nil {
-			log.Printf("Couldn't upload file %v to %v:%v. Here's why: %v\n",
-				fileName, bucketName, objectKey, err)
-		}
-	}
-	return err
-}
-
-// DownloadFile gets an object from a bucket and stores it in a local file.
-func downloadFile(client *s3.Client, bucketName string, objectKey string, fileName string) error {
-	result, err := client.GetObject(context.TODO(), &s3.GetObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(objectKey),
+func (s *S3Object) GetToken() (*oauth2.Token, error) {
+	result, err := s.GetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(s.BucketName),
+		Key:    aws.String(s.ObjectKey),
 	})
 	if err != nil {
-		log.Printf("Couldn't get object %v:%v. Here's why: %v\n", bucketName, objectKey, err)
-		return err
+		s.Log.Printf("error getting object %v:%v. %v\n", s.BucketName, s.ObjectKey, err)
+		return nil, err
 	}
+
 	defer result.Body.Close()
-	file, err := os.Create(fileName)
+
+	var t *oauth2.Token
+
+	data := json.NewDecoder(result.Body)
+
+	return t, data.Decode(&t)
+}
+
+func (s *S3Object) SetToken(token *oauth2.Token) error {
+	data, err := json.Marshal(&token)
 	if err != nil {
-		log.Printf("Couldn't create file %v. Here's why: %v\n", fileName, err)
 		return err
 	}
-	defer file.Close()
-	body, err := io.ReadAll(result.Body)
+
+	buf := bytes.NewBuffer(data)
+
+	_, err = s.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(s.BucketName),
+		Key:    aws.String(s.ObjectKey),
+		Body:   buf,
+	})
 	if err != nil {
-		log.Printf("Couldn't read object body from %v. Here's why: %v\n", objectKey, err)
+		s.Log.Printf("error uploading token to %v:%v. %v\n",
+			s.BucketName, s.ObjectKey, err)
+		return err
 	}
-	_, err = file.Write(body)
-	return err
+
+	return nil
+}
+
+func (s *S3Object) KeyNotPresent() bool {
+	_, err := s.GetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(s.BucketName),
+		Key:    aws.String(s.ObjectKey),
+	})
+	return err != nil
 }
