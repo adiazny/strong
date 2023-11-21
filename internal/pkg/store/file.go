@@ -72,7 +72,7 @@ func (f *File) SetToken(t *oauth2.Token) error {
 	return err
 }
 
-func (f *File) FileNotPresent() bool {
+func (f *File) TokenNotPresent() bool {
 	_, err := os.Stat(f.path)
 	return err != nil
 }

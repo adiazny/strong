@@ -59,10 +59,11 @@ func (s *S3Object) SetToken(token *oauth2.Token) error {
 	return nil
 }
 
-func (s *S3Object) KeyNotPresent() bool {
+func (s *S3Object) TokenNotPresent() bool {
 	_, err := s.GetObject(context.TODO(), &s3.GetObjectInput{
 		Bucket: aws.String(s.BucketName),
 		Key:    aws.String(s.ObjectKey),
 	})
+
 	return err != nil
 }

@@ -70,14 +70,16 @@ func main() {
 	flag.StringVar(&cfg.gdriveRedirectURL, "gdrive-redirect", defaultRedirectURL, "Google Drive Redirect URL")
 	flag.Parse()
 
-	//=========
-	// Temp S3 Testing
+	//========================================================================
+	// AWS S3 Store
 
-	awsConfig, err := awsConfig.LoadDefaultConfig(context.TODO())
+	// TODO:
+	// - parse aws environment vars: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+
+	awsConfig, err := awsConfig.LoadDefaultConfig(ctx)
 	if err != nil {
-		fmt.Println("Couldn't load default configuration. Have you set up your AWS account?")
-		fmt.Println(err)
-		return
+		log.Printf("error loading default aws config %v\n", err)
+		os.Exit(1)
 	}
 
 	s3Client := s3.NewFromConfig(awsConfig)
@@ -97,7 +99,7 @@ func main() {
 	}
 
 	//========================================================================
-	// Create files
+	// Local File Store
 
 	// gStore, err := store.NewFile(gdriveTokenPath)
 	// if err != nil {
@@ -162,7 +164,7 @@ func main() {
 		gdriveURL := gdriveAuthProvider.AuthCodeURL("gdrive-state")
 		log.Println(gdriveURL)
 
-		for gDriveS3Store.KeyNotPresent() {
+		for gdriveAuthProvider.Storage.TokenNotPresent() {
 			time.Sleep(10 * time.Second)
 		}
 	}
@@ -207,8 +209,7 @@ func main() {
 		stravaURL := stravaAuthProvider.AuthCodeURL("strava-state")
 		log.Println(stravaURL)
 
-		// This should be the filestorage method
-		for stravaS3Store.KeyNotPresent() {
+		for stravaAuthProvider.Storage.TokenNotPresent() {
 			time.Sleep(10 * time.Second)
 		}
 	}

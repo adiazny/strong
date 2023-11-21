@@ -79,9 +79,6 @@ func (p *Provider) AuthCodeURL(state string) string {
 	return p.Config.AuthCodeURL(state)
 }
 
-//======================
-// NEW
-
 // Exchange stores a token after retrieval
 func (p *Provider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
 	token, err := p.Config.Exchange(ctx, code)
@@ -103,7 +100,7 @@ func (p *Provider) TokenSource(ctx context.Context, t *oauth2.Token) oauth2.Toke
 	return StorageTokenSource(ctx, p, t)
 }
 
-// Client is attached to our TokenSource
+// Client is attached to the TokenSource
 func (p *Provider) Client(ctx context.Context, t *oauth2.Token) *http.Client {
 	return oauth2.NewClient(ctx, p.TokenSource(ctx, t))
 }

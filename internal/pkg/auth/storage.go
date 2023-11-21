@@ -6,4 +6,5 @@ import "golang.org/x/oauth2"
 type Storage interface {
 	GetToken() (*oauth2.Token, error)
 	SetToken(*oauth2.Token) error
+	TokenNotPresent() bool
 }
