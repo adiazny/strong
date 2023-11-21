@@ -65,6 +65,13 @@ func main() {
 	flag.StringVar(&cfg.gdriveRedirectURL, "gdrive-redirect", defaultRedirectURL, "Google Drive Redirect URL")
 	flag.Parse()
 
+	//=========
+	// Temp S3 Testing
+
+	store.Setup()
+	log.Print("s3 exit\n")
+	os.Exit(1)
+
 	//========================================================================
 	// Create files
 
