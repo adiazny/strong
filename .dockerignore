@@ -1,0 +1,10 @@
+.git/
+.dockerignore
+.gitignore
+.env
+build
+diagram.excalidraw
+strong-diagram.jpg
+LICENSE
+Makefile
+README.md

@@ -3,6 +3,10 @@ SHELL := /bin/bash
 BINARY_NAME ?= strong
 CMD_DIR := ./cmd
 BUILD_DIR := ./bin
+BASE_IMAGE_NAME := adiazny
+SERVICE_NAME    := strong-app
+VERSION         := 0.1.0
+SERVICE_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
 
 # ==================================================================================== #
 # HELPERS
@@ -85,3 +89,13 @@ production/deploy: confirm tidy audit no-dirty
 	GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o=/tmp/bin/linux_amd64/${BINARY_NAME} ${MAIN_PACKAGE_PATH}
 	upx -5 /tmp/bin/linux_amd64/${BINARY_NAME}
     # Include additional deployment steps here...
+
+# DOCKER
+.PHONY: strong-app
+strong-app:
+	docker build \
+		-f build/Dockerfile \
+		-t $(SERVICE_IMAGE) \
+		--build-arg BUILD_REF=$(VERSION) \
+		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		.
