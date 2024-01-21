@@ -1,9 +1,11 @@
 package strong
 
 import (
+	"cmp"
 	"encoding/csv"
 	"fmt"
 	"io"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -177,6 +179,12 @@ func AssembleWorkouts(workouts []Workout) []Workout {
 
 		finalWorkouts = append(finalWorkouts, workout)
 	}
+
+	slices.SortStableFunc(finalWorkouts, func(a, b Workout) int {
+		return cmp.Compare(a.Date, b.Date)
+	})
+
+	slices.Reverse(finalWorkouts)
 
 	return finalWorkouts
 }
