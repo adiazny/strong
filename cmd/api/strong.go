@@ -42,6 +42,9 @@ type config struct {
 	gdriveClientID     string
 	gdriveClientSecret string
 	gdriveRedirectURL  string
+	awsAccessKeyID     string
+	awsSecretAccessKey string
+	awsRegion          string
 }
 
 type application struct {
@@ -65,13 +68,13 @@ func main() {
 	flag.StringVar(&cfg.gdriveClientID, "gdrive-client", os.Getenv("GDRIVE_CLIENT_ID"), "Google Drive API Client ID")
 	flag.StringVar(&cfg.gdriveClientSecret, "gdrive-secret", os.Getenv("GDRIVE_CLIENT_SECRET"), "Google Drive API Client Secret")
 	flag.StringVar(&cfg.gdriveRedirectURL, "gdrive-redirect", defaultRedirectURL, "Google Drive Redirect URL")
+	flag.StringVar(&cfg.awsAccessKeyID, "access-key-id", os.Getenv("AWS_ACCESS_KEY_ID"), "AWS Access Key ID")
+	flag.StringVar(&cfg.awsSecretAccessKey, "secret-access-key", os.Getenv("AWS_SECRET_ACCESS_KEY"), "AWS Secret Access Key")
+	flag.StringVar(&cfg.awsRegion, "aws-region", os.Getenv("AWS_DEFAULT_REGION"), "AWS Default Region")
 	flag.Parse()
 
 	//========================================================================
 	// AWS S3 Store
-
-	// TODO:
-	// - parse aws environment vars: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 
 	// awsConfig, err := awsConfig.LoadDefaultConfig(ctx)
 	// if err != nil {
@@ -81,14 +84,14 @@ func main() {
 
 	// s3Client := s3.NewFromConfig(awsConfig)
 
-	// gDriveS3Store := &store.S3Object{
+	// gStore := &store.S3Object{
 	// 	Log:        log,
 	// 	Client:     s3Client,
 	// 	BucketName: s3BucketName,
 	// 	ObjectKey:  gdriveTokenPath,
 	// }
 
-	// stravaS3Store := &store.S3Object{
+	// stravaStore := &store.S3Object{
 	// 	Log:        log,
 	// 	Client:     s3Client,
 	// 	BucketName: s3BucketName,
