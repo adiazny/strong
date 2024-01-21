@@ -161,7 +161,7 @@ func main() {
 		if err != nil {
 			log.Printf("error processing file %v\n", err)
 			os.Exit(1)
-		}
+		}	
 	} else {
 		log.Printf("empty drive file imported\n")
 		os.Exit(1)

@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	activitiesPath = "activities"
-	athletePath    = "athlete"
-	weightTraining = "WeightTraining"
+	activitiesPath   = "activities"
+	activitesPerPage = 200
+	athletePath      = "athlete"
+	weightTraining   = "WeightTraining"
 )
 
 type Provider struct {
@@ -41,39 +42,27 @@ type Actvitiy struct {
 }
 
 func (provider *Provider) GetActivities() ([]Actvitiy, error) {
-	resp, err := provider.httpClient.Get(fmt.Sprintf("%s/%s/%s?per_page=200", provider.baseURL, athletePath, activitiesPath))
-	if err != nil {
-		return nil, fmt.Errorf("error performing http get request: %w", err)
-	}
+	allActivites := make([]Actvitiy, activitesPerPage)
 
-	defer resp.Body.Close()
+	page := 1
 
-	var respBody []byte
-
-	if resp.StatusCode != http.StatusOK {
-		respBody, err = io.ReadAll(resp.Body)
+	for {
+		provider.log.Printf("processing strava athlete activities page %d", page)
+		activities, err := provider.getActivitiesPerPage(page)
 		if err != nil {
-			return nil, fmt.Errorf("error reading response body %w", err)
+			return nil, err
 		}
 
-		provider.log.Printf("%s\n", respBody)
+		if len(activities) == 0 {
+			break
+		}
 
-		return nil, fmt.Errorf("error response status code is %d", resp.StatusCode)
+		allActivites = append(allActivites, activities...)
+
+		page++
 	}
 
-	activities := []Actvitiy{}
-
-	respBody, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body %w", err)
-	}
-
-	err = json.Unmarshal(respBody, &activities)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshling response body %w", err)
-	}
-
-	return activities, nil
+	return allActivites, nil
 }
 
 func (provider *Provider) PostActivity(activity Actvitiy) error {
@@ -115,7 +104,7 @@ func (provider *Provider) UploadNewWorkouts(ctx context.Context, workouts []stro
 	for _, activity := range newActivities {
 		err := provider.PostActivity(activity)
 		if err != nil {
-			return err
+			return fmt.Errorf("error %v activity: %s and date %s", err, activity.Name, activity.StartDateLocal)
 		}
 	}
 
@@ -159,4 +148,40 @@ func convertToStravaActivity(workouts []strong.Workout) []Actvitiy {
 	}
 
 	return newActivities
+}
+
+func (provider *Provider) getActivitiesPerPage(page int) ([]Actvitiy, error) {
+	resp, err := provider.httpClient.Get(fmt.Sprintf("%s/%s/%s?per_page=%d&page=%d", provider.baseURL, athletePath, activitiesPath, activitesPerPage, page))
+	if err != nil {
+		return nil, fmt.Errorf("error performing http get request: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	var respBody []byte
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("error reading response body %w", err)
+		}
+
+		provider.log.Printf("%s\n", respBody)
+
+		return nil, fmt.Errorf("error response status code is %d", resp.StatusCode)
+	}
+
+	activities := []Actvitiy{}
+
+	respBody, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body %w", err)
+	}
+
+	err = json.Unmarshal(respBody, &activities)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshling response body %w", err)
+	}
+
+	return activities, nil
 }
